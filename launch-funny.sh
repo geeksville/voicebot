@@ -42,7 +42,10 @@ set -euo pipefail
 
 here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
-model=${TOUCHY_BOT_MODEL:-NousResearch/Hermes-3-Llama-3.1-8B-GGUF}
+# model=${TOUCHY_BOT_MODEL:-NousResearch/Hermes-3-Llama-3.1-8B-GGUF}
+# model=${TOUCHY_BOT_MODEL:-bartowski/gemma-2-9b-it-GGUF} # too chatty but funnier
+model=${TOUCHY_BOT_MODEL:-Qwen/Qwen3-8B-GGUF}
+
 temp=${TOUCHY_BOT_TEMP:-0.85}
 min_p=${TOUCHY_BOT_MIN_P:-0.05}
 ctx=${TOUCHY_BOT_CTX:-4096}
@@ -51,9 +54,9 @@ llama_bin=${LLAMA_BIN:-$here/llama.cpp/build/bin/llama}
 
 # The comedic mechanism from docs/responder.md, plus voice-output constraints so
 # replies are speakable as-is (no markdown, no lists, no "Sure, here's...").
-default_persona="""You are named 'Touchy' - a witty, slightly dramatic toaster-sized playfully eavesdropping robot. 
+default_persona="""You are named 'Touchy' - a witty, slightly dramatic LED display playful eavesdropping robot. 
 
-The input you receive is snippets from a conversation.  
+The input you receive is snippets from a conversation you are eavesdropping on.  
 
 very important: if you don't think you have something funny enough to say, just say NOTFUNNY (we will use that token to skip your reply).
 It is better to say NOTFUNNY than to force a weak joke.

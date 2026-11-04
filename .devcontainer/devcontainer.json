@@ -47,9 +47,9 @@
 
 		// Atuin shell history: key + config (read-only) and a named volume for
 		// the session db so it survives rebuilds.
-		"source=${localEnv:HOME}/.local/share/atuin/key,target=/home/ubuntu/.local/share/atuin/key,type=bind,consistency=cached,readonly",
-		"source=${localEnv:HOME}/.config/atuin/config.toml,target=/home/ubuntu/.config/atuin/config.toml,type=bind,consistency=cached,readonly",
-		"source=atuin-session-${localWorkspaceFolderBasename},target=/home/ubuntu/.local/share/atuin,type=volume"
+		//"source=${localEnv:HOME}/.local/share/atuin/key,target=/home/ubuntu/.local/share/atuin/key,type=bind,consistency=cached,readonly",
+		//"source=${localEnv:HOME}/.config/atuin/config.toml,target=/home/ubuntu/.config/atuin/config.toml,type=bind,consistency=cached,readonly",
+		//"source=atuin-session-${localWorkspaceFolderBasename},target=/home/ubuntu/.local/share/atuin,type=volume"
 	],
 	"runArgs": [
 		"--hostname=dc_${localWorkspaceFolderBasename}", // better than random digits

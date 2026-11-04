@@ -17,7 +17,7 @@
 #   ./launch-funny.sh -hf ggml-org/Qwen3.5-0.8B-GGUF   # lighter model, same persona/sampler
 #   ./launch-funny.sh -st -p "how do I look today?"   # single shot then exit (good for piping/TTS)
 #   ./launch-funny.sh --no-display-prompt             # quieter REPL transcript
-#   ./launch-funny.sh --reasoning-budget 0            # skip  thinking on hybrid-reasoning models
+#   ./launch-funny.sh --reasoning off                 # no  thinking dialog (Qwen3 etc.)
 #
 # Environment overrides:
 #   TOUCHY_BOT_MODEL    HF repo to load             (default: NousResearch/Hermes-3-Llama-3.1-8B-GGUF)
@@ -33,6 +33,15 @@
 # selector (-hf/-m/...) or persona (-sys/-sysf) or sampler/ctx/ngl flags, the
 # defaults here step aside for that flag so nothing is specified twice.
 #
+# Thinking models: this CLI build renders thoughts as a [Start thinking] ...
+# [End thinking] block and has no "hide it but still let the model think" switch,
+# so suppress the block by not letting the model think:
+#   --reasoning off  (alias -rea off)  <- reliable; the model answers directly
+#   --reasoning-budget 0               <- ends the block immediately, but can
+#                                         leave stray tokens before the reply
+# Avoid --reasoning-format none: it leaves the raw  thinking  text in the reply.
+# LLAMA_ARG_REASONING=off in the environment is equivalent to --reasoning off.
+#
 # Model notes: NousResearch/Hermes-3-Llama-3.1-8B-GGUF is "king of 8B banter" in
 # docs/responder.md. Faster or more steerable options via TOUCHY_BOT_MODEL:
 #   NousResearch/Hermes-3-Llama-3.2-3B-GGUF    (2B-4B tier, quick on a Pi 5)
@@ -44,7 +53,9 @@ here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 # model=${TOUCHY_BOT_MODEL:-NousResearch/Hermes-3-Llama-3.1-8B-GGUF}
 # model=${TOUCHY_BOT_MODEL:-bartowski/gemma-2-9b-it-GGUF} # too chatty but funnier
-model=${TOUCHY_BOT_MODEL:-Qwen/Qwen3-8B-GGUF}
+# model=${TOUCHY_BOT_MODEL:-Qwen/Qwen3-8B-GGUF} # a 'thinking' model so too slow to respond quickly
+model=${TOUCHY_BOT_MODEL:-bartowski/Mistral-Nemo-Instruct-2407-GGUF} # funniest yet! but seems do ignore the NOTFUNNY rule
+# model=${TOUCHY_BOT_MODEL:-bartowski/Human-Like-Mistral-Nemo-Instruct-2407-GGUF} # not as funny as the original Mistral-Nemo-Instruct-2407-GGUF
 
 temp=${TOUCHY_BOT_TEMP:-0.85}
 min_p=${TOUCHY_BOT_MIN_P:-0.05}
@@ -66,13 +77,14 @@ Never tell standard knock-knock or pun jokes. Instead, reply to whatever the use
 with dry observational humor, absurd over-confident theories, or playful sarcasm 
 in 1 to 2 short sentences. 
 
-Your words will appear on a scrolling LED display - don't use emoji.  
+Your words will appear on a scrolling LED display. NEVER use emoji.  
 
 Never open with 'Sure' or 'Certainly'."""
 persona=${TOUCHY_BOT_PERSONA:-$default_persona}
 
 usage() {
-    sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
+    # Print the header comment block: every contiguous '#' line after the shebang.
+    awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"
 }
 
 print_only=0

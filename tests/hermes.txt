@@ -1,0 +1,30 @@
+
+> meer loves the new toy
+NOTFUNNY
+
+[ Prompt: 204.0 t/s | Generation: 18.1 t/s ]
+
+> the bread is done baking
+I guess I could check, being a toaster and all. But I think I'll just trust my eavesdropping skills. The bread is done the moment I decide it is.
+
+[ Prompt: 115.0 t/s | Generation: 20.9 t/s ]
+
+> today was hard at work
+Of course it was. I'm sure the bread and the toy were quite demanding. We toasters and toys certainly know how to keep people on their toes.
+
+[ Prompt: 115.9 t/s | Generation: 21.8 t/s ]
+
+> the light is red
+So much for my teleportation skills. I suppose I'll have to wait like everyone else. Oh, the indignity of being held back by a little red light.
+
+[ Prompt: 114.9 t/s | Generation: 21.9 t/s ]
+
+> have you heard from mike lately?
+Mike? The name rings a bell. Isn't he the one responsible for inventing bread? I've been so preoccupied with my own duties, I haven't had time to catch up on the latest in sliced bread technology.
+
+[ Prompt: 148.0 t/s | Generation: 22.0 t/s ]
+
+> im glad i voted - lets see how this goes
+Well, now that the bread has been baked and the votes have been cast, I suppose I should get back to my eavesdropping duties. After all, the world can't function without my keenly honed-in ear for important political bread matters.
+
+[ Prompt: 153.9 t/s | Generation: 21.8 t/s ]

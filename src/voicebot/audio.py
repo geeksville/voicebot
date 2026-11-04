@@ -95,6 +95,22 @@ _MOONSHINE_ARCHES = {
 }
 
 
+def _as_device(value: int | str | None) -> int | str | None:
+    """Normalise a PortAudio device spec.
+
+    ``MicTranscriber.device()`` (and sounddevice) treat a *string* as a
+    case-insensitive name substring and an *int* as a device index. The CLI's
+    ``--device`` is a string, so ``--device 5`` would otherwise be passed
+    through as the name ``"5"`` and latch onto whatever device happened to
+    contain a 5 (``hw:5,0`` …). Coerce a bare integer string back to an index.
+    """
+    if isinstance(value, str):
+        text = value.strip()
+        if text.isdigit():
+            return int(text)
+    return value
+
+
 def resolve_device(hint: str | None, *, device: int | str | None = None) -> int | str | None:
     """Pick a PortAudio capture device.
 
@@ -104,7 +120,7 @@ def resolve_device(hint: str | None, *, device: int | str | None = None) -> int 
     means "let PortAudio pick the default".
     """
     if device is not None:
-        return device
+        return _as_device(device)
     if not hint:
         return None
     try:
@@ -121,12 +137,26 @@ def resolve_device(hint: str | None, *, device: int | str | None = None) -> int 
     return None
 
 
+def _close_quietly(mic) -> None:
+    """Best-effort release of a ``MicTranscriber`` that failed partway through.
+
+    ``load()`` opens the model and its capture stream before ``start()`` can
+    fail, so a half-built transcriber still holds the microphone; ``close()``
+    is safe on a partially constructed one. Never mask the real error.
+    """
+    try:
+        mic.close()
+    except Exception as exc:  # noqa: BLE001 - cleanup must not raise
+        log.debug("mic.close() while cleaning up: %s", exc)
+
+
 class AudioIn:
     """A :class:`TranscriptSource` backed by the mic and a Moonshine model.
 
     ``MicTranscriber`` does the heavy lifting (VAD, streaming, its own capture
     worker, resampling to 16 kHz); we configure it, bridge its ``on_line``
-    callback onto a queue, and hand finished lines out through :meth:`lines`.
+    callback onto a queue (and log its ``on_error`` stream), and hand finished
+    lines out through :meth:`lines`.
     """
 
     def __init__(
@@ -173,11 +203,15 @@ class AudioIn:
         if self._options:
             mic.options(self._options)
         mic.on_line(self._on_line)
+        mic.on_error(self._on_error)
         try:
             log.info("loading the %s speech-to-text model…", self._model_arch)
             mic.load()
             mic.start()
         except Exception as exc:
+            # load() may already have opened the model and its stream; a failed
+            # start() must not leak the microphone for the life of the process.
+            _close_quietly(mic)
             raise AudioError(f"could not start the microphone: {exc}") from exc
         return mic
 
@@ -186,6 +220,15 @@ class AudioIn:
         text = (getattr(line, "text", "") or "").strip()
         if text:
             self._queue.put(Utterance(text, getattr(line, "duration", None)))
+
+    def _on_error(self, error) -> None:
+        """Called from Moonshine's worker thread when the pipeline raises.
+
+        The library delivers ``Error`` events (a capture/inference failure
+        inside its audio worker) to ``on_error`` and otherwise drops them, so
+        attaching this is what keeps a broken stream from failing silently.
+        """
+        log.warning("speech-to-text error: %s", error)
 
     # -- TranscriptSource --------------------------------------------------
 

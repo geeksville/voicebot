@@ -219,13 +219,6 @@ bit ugly, iterate with it until it isn't.
 * Only send **tested** code you've run against real hardware (not just the
   simulator).
 
-## `launch-funny.sh`
-
-Kept in-tree as the **local `llama.cpp` fallback / reference** this project was
-ported from (its persona and sampler are the source of truth for
-`src/voicebot/persona.py`). It needs a local `llama.cpp` build; `voicebot` itself
-needs only network access to the Ollama server.
-
 ## License
 
-GPL-3.0-or-later — see [LICENSE](LICENSE).
+GPL-3.0-or-later — see [LICENSE](LICENSE).  Copyright 2026 S. Kevin Hester, kevinh@geeksville.com.

@@ -1,0 +1,47 @@
+# voicebot — Poetry project.
+#
+# Deliberately the legacy [tool.poetry] layout (no [project] table): Poetry 2.x
+# ignores path dependencies declared under [tool.poetry.dependencies] when a
+# [project] table exists (the parent repo hit this quirk with `just init`). No
+# path dep is needed yet — Stage 3 (display.py) adds `touchy-pad = { path =
+# "../../app" }`, and this layout keeps that clean. See docs/plans/initial.md.
+
+[tool.poetry]
+name = "voicebot"
+version = "0.1.0"
+description = "An eavesdropping desk robot: witty one-liners about overheard conversation, via a remote LLM."
+authors = ["Touchy-Pad contributors"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+packages = [{ include = "voicebot", from = "src" }]
+
+[tool.poetry.dependencies]
+# Match the touchy-pad host stack's supported range.
+python = ">=3.11,<3.15"
+# OpenAI-compatible client — used against the remote Ollama /v1 endpoint.
+openai = ">=1.40"
+# CLI framework (matches the touchy CLI / googly-vr conventions).
+click = ">=8.1"
+# Only for the native Ollama /api/chat fallback (exact sampler control).
+requests = ">=2.31"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8"
+ruff = ">=0.8"
+
+[tool.poetry.scripts]
+voicebot = "voicebot.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: hits the real remote LLM server (skipped unless VOICEBOT_LIVE=1)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"

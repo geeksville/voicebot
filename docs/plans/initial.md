@@ -8,12 +8,12 @@ of the parent repo's **creep3r** art project
 of `touchy-pad` today, developed standalone, and intended to be extracted to its
 own home later (exactly like the sibling `tools/googly-vr`).
 
-> **Status (2026-11-04): planning.** Nothing but the pre-existing
-> `launch-funny.sh` prototype and research notes live here yet. The *responder*
-> half is being ported from that local-`llama.cpp` script to a Poetry-based
-> Python app that talks to a **remote Ollama server**, which is the first
-> concrete stage (Stage 1 below). Display and speech-to-text are **documented
-> but explicitly deferred** to later stages.
+> **Status (2026-11-04): Stages 1 + 2 implemented.** The responder CLI
+> (`voicebot reply` / `voicebot models`) is built and verified against the live
+> server: `just test` green (17 pass / 1 live-skip), `just lint` clean, and an
+> end-to-end `voicebot reply -f sim-overheard.txt` on both the `/v1` and
+> `--native` surfaces. Display (Stage 3), speech-to-text (Stage 4) and the full
+> `creep3r` loop (Stage 5) remain **explicitly deferred**.
 
 ## Goal / vision
 
@@ -92,8 +92,8 @@ server, and because the same code is reusable by the whole `creep3r` family.
 
   | Ollama tag | Params / quant | Size | Notes |
   |---|---|---|---|
-  | `hf.co/bartowski/Human-Like-Mistral-Nemo-Instruct-2407-GGUF:Q8_0` | 12.2B / Q8_0 | 13.0 GB | **default** — funniest in the recorded logs; the rough-plan example |
-  | `hf.co/NousResearch/Hermes-3-Llama-3.1-8B-GGUF:latest` | 8.0B / Q4_K_M | 4.9 GB | fast + steerable fallback; `launch-funny.sh`'s default |
+  | `hf.co/bartowski/Human-Like-Mistral-Nemo-Instruct-2407-GGUF:Q8_0` | 12.2B / Q8_0 | 13.0 GB | funniest in the recorded logs (the rough-plan example); more erratic at NOTFUNNY |
+  | `hf.co/NousResearch/Hermes-3-Llama-3.1-8B-GGUF:latest` | 8.0B / Q4_K_M | 4.9 GB | **default** — reliable NOTFUNNY behaviour; `launch-funny.sh`'s default |
   | `hf.co/bartowski/Qwen2.5-Coder-14B-Instruct-GGUF:Q8_0` | 14.8B / Q8_0 | 15.7 GB | larger / slower |
   | `hf.co/bartowski/Qwen2.5-Coder-32B-Instruct-GGUF:Q3_K_M` | 32.8B / Q3_K_M | 15.9 GB | largest |
 
@@ -105,7 +105,7 @@ server, and because the same code is reusable by the whole `creep3r` family.
 | Setting | CLI | Env | Default |
 |---|---|---|---|
 | Server URL | `--url` | `VOICEBOT_URL` | `https://kai.pygmy-map.ts.net` |
-| Model | `--model` | `VOICEBOT_MODEL` | `…/Human-Like-Mistral-Nemo-Instruct-2407-GGUF:Q8_0` |
+| Model | `--model` | `VOICEBOT_MODEL` | `hf.co/NousResearch/Hermes-3-Llama-3.1-8B-GGUF:latest` |
 | Persona text | `--persona` | `VOICEBOT_PERSONA` | the toaster-robot persona (below) |
 | Persona file | `--persona-file` | — | (none) |
 | Temperature | `--temperature` | `VOICEBOT_TEMP` | `0.85` |
@@ -280,10 +280,10 @@ device output, `display.py` becomes the **only** module that imports
   `--native` `/api/chat` reply (which definitively honours `options`) and, if
   `/v1` drops them, flips the default to native or documents `--native` as
   required for faithful sampling. *Need: a decision, then a one-line flip.*
-* **Model default.** Notes say Human-Like Mistral Nemo is "funniest yet but
-  seems to ignore the NOTFUNNY rule" (`launch-funny.sh` comment). Proposal:
-  default to **Hermes-3-8B** for reliable `NOTFUNNY` behaviour, offer Nemo via
-  `--model`. *Need: the user's pick; both are already pulled.*
+* **Model default — resolved.** Shipped default is **Hermes-3-8B** (reliable
+  `NOTFUNNY`); the funnier-but-more-erratic Human-Like Mistral Nemo (12B, Q8_0)
+  is one `--model …` away. Both are already pulled. Revisit if Nemo is ever
+  tuned to respect `NOTFUNNY`.
 * **Server availability / auth.** The endpoint is open over Tailscale today; if
   it grows auth or a different hostname, `--url`/`VOICEBOT_URL` absorb it, but
   there is no key handling yet. *Need: whether an API key is ever expected.*

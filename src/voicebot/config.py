@@ -17,7 +17,7 @@ from dataclasses import dataclass
 #: The remote Ollama server (Tailscale; verified 2026-11-04, Ollama 0.40.14).
 DEFAULT_URL = "https://kai.pygmy-map.ts.net"
 
-#: Model default. Hermes-3-8B is the reliable choice for honouring the NOTFUNNY
+#: Model default. Hermes-3-8B is the reliable choice for honouring the /notfunny
 #: contract; the funnier-but-more-erratic Human-Like Mistral Nemo (12B, Q8_0) is
 #: one flag away: ``--model hf.co/bartowski/Human-Like-Mistral-Nemo-Instruct-2407-GGUF:Q8_0``.
 DEFAULT_MODEL = "hf.co/NousResearch/Hermes-3-Llama-3.1-8B-GGUF:latest"

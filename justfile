@@ -28,6 +28,29 @@ reply *args: install
 listen *args: install
     poetry run voicebot listen {{args}}
 
+# Listen *and* scroll each quip on a touchy-pad (LED matrix / LCD).
+# Pass CLI flags straight after the recipe name: `just listen-pad --fake f.txt`
+listen-pad *args: install
+    poetry run voicebot listen --display pad {{args}}
+
+# Point the touchy-pad dependency at the sibling checkout (../../app) — the dev
+# default. Rewrites pyproject.toml + poetry.lock (committed files).
+use-touchy-local:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    poetry add --no-interaction --path ../../app --develop touchy-pad
+    poetry install --no-interaction
+
+# Point the touchy-pad dependency at the published PyPI package (once released —
+# the parent repo's docs/pypi-checklist.md is still unchecked, so this errors
+# until then). Rewrites pyproject.toml + poetry.lock (committed files); the way
+# back is `git checkout pyproject.toml poetry.lock`.
+use-touchy-pypi:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    poetry add --no-interaction "touchy-pad@^0.3"
+    poetry install --no-interaction
+
 # List the models the remote server has pulled.
 models *args: install
     poetry run voicebot models {{args}}

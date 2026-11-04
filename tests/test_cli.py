@@ -38,31 +38,33 @@ def test_reply_line(monkeypatch):
 
 
 def test_reply_suppresses_notfunny(monkeypatch):
-    _use_fake(monkeypatch, {"meer loves the new toy": "NOTFUNNY"})
+    _use_fake(monkeypatch, {"meer loves the new toy": "/notfunny"})
     result = CliRunner().invoke(cli.main, ["reply", "--line", "meer loves the new toy"])
     assert result.exit_code == 0
     assert result.output.strip() == ""
 
 
-def test_reply_no_notfunny_prints_raw(monkeypatch):
-    _use_fake(monkeypatch, {"x": "NOTFUNNY"})
-    result = CliRunner().invoke(cli.main, ["reply", "--line", "x", "--no-notfunny"])
-    assert result.output.strip() == "NOTFUNNY"
+def test_reply_strips_commands_from_the_printed_text(monkeypatch):
+    _use_fake(monkeypatch, {"the light is red": "/color:red Danger ahead"})
+    result = CliRunner().invoke(cli.main, ["reply", "--line", "the light is red"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "Danger ahead"
 
 
 def test_reply_json_is_structural(monkeypatch):
-    _use_fake(monkeypatch, {"x": "NOTFUNNY"})
+    _use_fake(monkeypatch, {"x": "/notfunny"})
     result = CliRunner().invoke(cli.main, ["reply", "--line", "x", "--json"])
     assert json.loads(result.output) == {
         "input": "x",
         "reply": "",
         "skip": True,
         "model": cli.DEFAULT_MODEL,
+        "raw": "/notfunny",
     }
 
 
 def test_reply_reads_lines_from_file(monkeypatch, tmp_path):
-    _use_fake(monkeypatch, {"a": "quip a", "b": "NOTFUNNY", "c": "quip c"})
+    _use_fake(monkeypatch, {"a": "quip a", "b": "/notfunny", "c": "quip c"})
     lines = tmp_path / "overheard.txt"
     lines.write_text("a\n\nb\nc\n")  # blank line is dropped
     result = CliRunner().invoke(cli.main, ["reply", "-f", str(lines)])

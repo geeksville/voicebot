@@ -37,6 +37,7 @@ def test_emits_heard_then_reply_inline():
     assert [e.kind for e in events] == [KIND_HEARD, KIND_REPLY]
     assert events[1].reply == "Time to toast!"
     assert events[1].text == "the bread is done baking"
+    assert [r.text for r in events[1].runs] == ["Time to toast!"]
 
 
 def test_short_utterances_are_skipped_and_the_llm_is_never_asked():
@@ -59,7 +60,7 @@ def test_short_utterances_are_skipped_and_the_llm_is_never_asked():
 def test_notfunny_comes_back_as_a_skip():
     events, emit = _collector()
     listener = Listener(
-        _responder(default="NOTFUNNY"), UtteranceGate(min_words=1), emit=emit, inline=True
+        _responder(default="/notfunny"), UtteranceGate(min_words=1), emit=emit, inline=True
     )
     listener.run(FakeTranscriptSource(["meer loves the new toy"]))
     skips = [e for e in events if e.kind == KIND_SKIP]
@@ -140,3 +141,28 @@ def test_events_are_logged_by_default(caplog):
     assert "HEARD: the bread is done baking" in caplog.text
     assert "REPLY: Time to toast!" in caplog.text
     assert "SKIP(too_short): uh" in caplog.text
+
+
+def test_the_display_sink_only_sees_replies():
+    shown: list[tuple] = []
+    listener = Listener(
+        _responder(),
+        UtteranceGate(min_words=1),
+        emit=lambda e: None,
+        display=shown.append,
+        inline=True,
+    )
+    listener.run(FakeTranscriptSource(["the bread is done baking", "uh"]))
+    assert ["".join(r.text for r in runs) for runs in shown] == ["Time to toast!"]
+
+
+def test_a_broken_display_sink_does_not_kill_the_loop():
+    def boom(runs):
+        raise RuntimeError("no pad")
+
+    events, emit = _collector()
+    listener = Listener(
+        _responder(), UtteranceGate(min_words=1), emit=emit, display=boom, inline=True
+    )
+    listener.run(FakeTranscriptSource(["the bread is done baking"]))
+    assert any(e.kind == KIND_REPLY for e in events)

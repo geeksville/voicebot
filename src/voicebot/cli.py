@@ -3,7 +3,7 @@
 Two commands:
 
 * ``voicebot reply`` — read overheard lines (``--line`` / ``-f FILE`` / stdin)
-  and print a witty reply for each, suppressing ``NOTFUNNY`` answers.
+  and print a witty reply for each (commands stripped; ``/notfunny`` suppresses).
 * ``voicebot models`` — list the models the server has pulled.
 
 Config resolution is *flag → env → default*, implemented via click's
@@ -36,6 +36,7 @@ from .config import (
     DEFAULT_URL,
     Settings,
 )
+from .display import DEFAULT_CLEAR_AFTER_S, SCREEN_NAME, PadDisplay
 from .gate import UtteranceGate
 from .listen import Listener, json_emitter
 from .persona import DEFAULT_PERSONA
@@ -121,7 +122,6 @@ def _build_responder(
     max_tokens: int,
     native: bool,
     timeout: float,
-    no_notfunny: bool,
 ) -> Responder:
     """A :class:`Responder` wired to a live :class:`ChatClient`."""
     if persona_file is not None:
@@ -137,7 +137,21 @@ def _build_responder(
         timeout=timeout,
     )
     client = ChatClient(settings)
-    return Responder(client.chat, model=model, persona=persona, notfunny=not no_notfunny)
+    return Responder(client.chat, model=model, persona=persona)
+
+
+def _make_display(kind: str, screen_name: str, clear_after_s: float) -> PadDisplay | None:
+    """The display for ``--display`` (``None`` for ``off``), banner already shown.
+
+    :class:`~voicebot.display.PadDisplay` only reaches for ``touchy_pad`` when it
+    actually draws, so ``--display pad`` without the host library installed
+    degrades to a logged warning rather than a crash.
+    """
+    if kind == "off":
+        return None
+    display = PadDisplay(screen_name=screen_name, clear_after=clear_after_s)
+    display.start()  # the "I'm voicebot" banner (connects lazily)
+    return display
 
 
 @click.group()
@@ -161,12 +175,6 @@ def main() -> None:
 @click.option(
     "--json", "json_out", is_flag=True, default=False, help="Emit one JSON object per input line."
 )
-@click.option(
-    "--no-notfunny",
-    is_flag=True,
-    default=False,
-    help="Print the raw NOTFUNNY token instead of suppressing it.",
-)
 def reply(
     line: str | None,
     file: TextIO | None,
@@ -181,7 +189,6 @@ def reply(
     native: bool,
     timeout: float,
     json_out: bool,
-    no_notfunny: bool,
 ) -> None:
     """Ask the LLM for a witty reply to each overheard line."""
     responder = _build_responder(
@@ -195,7 +202,6 @@ def reply(
         max_tokens=max_tokens,
         native=native,
         timeout=timeout,
-        no_notfunny=no_notfunny,
     )
     try:
         for source in _input_lines(line, file):
@@ -254,15 +260,33 @@ def reply(
     show_default=True,
     help="Suppress an identical repeat of the previous utterance within N seconds.",
 )
+@click.option(
+    "--display",
+    "display_kind",
+    type=click.Choice(["off", "pad"]),
+    default="off",
+    show_default=True,
+    help="Also scroll each quip on a touchy-pad (LED matrix or LCD).",
+)
+@click.option(
+    "--screen-name",
+    "screen_name",
+    default=SCREEN_NAME,
+    show_default=True,
+    help="On-device screen name used for the display (F:host/s/<name>.pb).",
+)
+@click.option(
+    "--clear-after",
+    "clear_after_s",
+    type=float,
+    default=DEFAULT_CLEAR_AFTER_S,
+    envvar="VOICEBOT_CLEAR_AFTER",
+    show_default=True,
+    help="Blank the display after N seconds with no new reply (0 = never).",
+)
 @_llm_options
 @click.option(
     "--json", "json_out", is_flag=True, default=False, help="Emit one JSON event per line."
-)
-@click.option(
-    "--no-notfunny",
-    is_flag=True,
-    default=False,
-    help="Show the raw NOTFUNNY token instead of suppressing it.",
 )
 def listen(
     fake: TextIO | None,
@@ -271,6 +295,9 @@ def listen(
     min_words: int,
     min_duration_s: float,
     debounce_s: float,
+    display_kind: str,
+    screen_name: str,
+    clear_after_s: float,
     url: str,
     model: str,
     persona: str,
@@ -282,7 +309,6 @@ def listen(
     native: bool,
     timeout: float,
     json_out: bool,
-    no_notfunny: bool,
 ) -> None:
     """Listen to the mic, transcribe, and log a witty reply per utterance."""
     if not json_out:
@@ -298,7 +324,6 @@ def listen(
         max_tokens=max_tokens,
         native=native,
         timeout=timeout,
-        no_notfunny=no_notfunny,
     )
     gate = UtteranceGate(min_words=min_words, min_duration_s=min_duration_s, debounce_s=debounce_s)
     source = (
@@ -306,8 +331,13 @@ def listen(
         if fake is not None
         else AudioIn(device=device, model_arch=model_arch)
     )
+    display = _make_display(display_kind, screen_name, clear_after_s)
     listener = Listener(
-        responder, gate, emit=json_emitter if json_out else None, inline=fake is not None
+        responder,
+        gate,
+        emit=json_emitter if json_out else None,
+        display=display.show if display is not None else None,
+        inline=fake is not None,
     )
     try:
         listener.run(source)
@@ -316,6 +346,9 @@ def listen(
         raise SystemExit(1) from exc
     except KeyboardInterrupt:  # pragma: no cover - interactive stop
         click.echo("voicebot: stopped.", err=True)
+    finally:
+        if display is not None:
+            display.close()
 
 
 @main.command()

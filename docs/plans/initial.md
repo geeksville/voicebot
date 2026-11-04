@@ -8,12 +8,17 @@ of the parent repo's **creep3r** art project
 of `touchy-pad` today, developed standalone, and intended to be extracted to its
 own home later (exactly like the sibling `tools/googly-vr`).
 
-> **Status (2026-11-04): Stages 1 + 2 implemented.** The responder CLI
-> (`voicebot reply` / `voicebot models`) is built and verified against the live
-> server: `just test` green (17 pass / 1 live-skip), `just lint` clean, and an
-> end-to-end `voicebot reply -f sim-overheard.txt` on both the `/v1` and
-> `--native` surfaces. Display (Stage 3), speech-to-text (Stage 4) and the full
-> `creep3r` loop (Stage 5) remain **explicitly deferred**.
+> **Status (2026-11-04): Stages 1 + 2 implemented; Stage 3 implemented** (see
+> [`ledout.md`](ledout.md)). The responder CLI (`voicebot reply` /
+> `voicebot models`) is built and verified against the live server, and
+> `voicebot listen --display pad` now scrolls each quip on a touchy-pad (LED
+> matrix or LCD) — including multi-colour via the `/color:` command. Speech-to-text
+> (Stage 4) and the full `creep3r` loop (Stage 5) remain **explicitly deferred**.
+>
+> **Contract change:** the bare `NOTFUNNY` sentinel was replaced by the
+> `/command` contract (`/notfunny`, `/color:NAME`) — see
+> [`ledout.md`](ledout.md) → "The `/command` contract". The `NOTFUNNY` text in
+> the Stage 1/2 sections below is kept as the historical record.
 
 ## Goal / vision
 
@@ -145,14 +150,13 @@ behaviour, including the `tests/hermes.txt` recordings:
 
 * **Sampler (defaults):** `temperature=0.85`, `min_p=0.05`, `num_ctx=4096`.
 
-* **`NOTFUNNY` contract.** The reply is a single string. If, after stripping
-  whitespace/quotes/`*`, it equals `NOTFUNNY` (case-insensitive, optionally
-  with trailing punctuation), the responder **suppresses** it: print nothing,
-  emit no display update. `tests/hermes.txt` is the canonical tape — the first
-  line (`meer loves the new toy`) correctly yields `NOTFUNNY`; the rest yield
-  quips. The CLI exposes `--no-notfunny` to force printing the raw token, and
-  `--json` to emit `{"input":…, "reply":…, "skip":true|false, "model":…}` per
-  line (so a downstream stage or a test can consume it structurally).
+* **~~`NOTFUNNY` contract~~ → the `/command` contract (superseded — see
+  [`ledout.md`](ledout.md)).** The reply is a single string; any word starting
+  with `/` is a command voicebot consumes. `/notfunny` suppresses the reply
+  (print nothing, no display update) and `/color:NAME` colours the text (many
+  colours per reply). The CLI's `--json` emits `{"input":…, "reply":…,
+  "skip":true|false, "model":…, "raw":…}` per line. `tests/hermes.txt` is the
+  historical tape (recorded against the old sentinel).
 
 ## File & component layout
 
@@ -230,7 +234,16 @@ device output, `display.py` becomes the **only** module that imports
 * Golden test against `tests/hermes.txt` with a **recorded** fake client; the
   live server test is `@pytest.mark.live`, skipped unless `VOICEBOT_LIVE=1`.
 
-### Stage 3 — display: scroll a quip on the LED matrix *(deferred)*
+### Stage 3 — display: scroll a quip on the touchy-pad — **DONE** → [`ledout.md`](ledout.md)
+
+Implemented in full (D0–D3 + the parent-repo `Label.recolor` feature, stage
+LB17): `src/voicebot/display.py` (the sole `touchy_pad` importer) builds one
+full-panel `SCROLL_CIRCULAR` label with inline recolour enabled, `voicebot listen
+--display pad` drives it, the pad connects lazily, and an idle timer clears the
+marquee. The `touchy-pad = { path = "../../app", develop = true }` path dep and
+the `just use-touchy-local` / `use-touchy-pypi` recipes are in place. See
+[`ledout.md`](ledout.md) for the plan, decisions and the (superseded) bullets
+below.
 
 * Add the `touchy-pad = { path = "../../app", develop = true }` path dep;
   `src/voicebot/display.py` is the sole `touchy_pad` importer.

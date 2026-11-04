@@ -1,14 +1,17 @@
-"""The audio-in loop: utterances -> gate -> responder -> emit(log).
+"""The audio-in loop: utterances -> gate -> responder -> emit(log) + display.
 
 Framework-free and hardware-free: it drives a :class:`~voicebot.audio.
 TranscriptSource` through an :class:`~voicebot.gate.UtteranceGate` and an
 injected :class:`~voicebot.responder.Responder`, calling ``respond`` on a
 **worker thread** so the audio side never blocks on the LLM round-trip
-(plan Q5: one item in flight; when the worker is busy the *older* pending
-utterance is dropped in favour of the newest). ``inline=True`` runs it
-synchronously — tests use that for deterministic ordering.
+(when the worker is busy the *older* pending utterance is dropped in favour of
+the newest). ``inline=True`` runs it synchronously — tests use that for
+deterministic ordering.
 
-See ``docs/plans/audioin.md``.
+Two sinks fire per event: ``emit`` (log / ``--json``, always) and ``display``
+(optional — :mod:`voicebot.display`'s pad, only on a ``KIND_REPLY``).
+
+See ``docs/plans/audioin.md`` and ``docs/plans/ledout.md``.
 """
 
 from __future__ import annotations
@@ -21,6 +24,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from .audio import Utterance
+from .commands import Run
 from .gate import UtteranceGate
 from .responder import Responder
 
@@ -42,6 +46,7 @@ class ListenEvent:
     reply: str = ""  # the quip (kind == KIND_REPLY)
     reason: str = ""  # skip reason (kind == KIND_SKIP); "keep" otherwise
     model: str = ""
+    runs: tuple[Run, ...] = ()  # the quip as colour runs (kind == KIND_REPLY)
 
     def as_dict(self) -> dict[str, str]:
         """The ``--json`` shape."""
@@ -55,6 +60,10 @@ class ListenEvent:
 
 
 Emitter = Callable[[ListenEvent], None]
+
+#: A display sink: handed one quip's colour runs (see :mod:`voicebot.display`).
+#: ``None`` means "log only, show nothing".
+DisplaySink = Callable[[tuple[Run, ...]], None]
 
 
 def log_emitter(event: ListenEvent) -> None:
@@ -88,12 +97,14 @@ class Listener:
         gate: UtteranceGate,
         *,
         emit: Emitter | None = None,
+        display: DisplaySink | None = None,
         max_queued: int = 2,
         inline: bool = False,
     ) -> None:
         self._responder = responder
         self._gate = gate
         self._emit = emit or log_emitter
+        self._display = display
         self._inline = inline
         self._queue: queue.Queue = queue.Queue(maxsize=max(1, int(max_queued)))
         self._thread: threading.Thread | None = None
@@ -175,5 +186,16 @@ class Listener:
             )
         else:
             self._emit(
-                ListenEvent(KIND_REPLY, text=utterance.text, reply=reply.text, model=reply.model)
+                ListenEvent(
+                    KIND_REPLY,
+                    text=utterance.text,
+                    reply=reply.text,
+                    model=reply.model,
+                    runs=reply.runs,
+                )
             )
+            if self._display is not None:
+                try:
+                    self._display(reply.runs)
+                except Exception:
+                    log.exception("display update failed")

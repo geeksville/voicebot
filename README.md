@@ -122,11 +122,10 @@ recipe's own `--display pad` and confuse click.)
   `touchy pref from-template led-32x8`. voicebot says so if it sees `0×0`.
 * The screen is saved as `F:host/s/voicebot.pb` (`--screen-name` to change it) —
   deliberately *not* `default`, so `touchy init` can't clobber it.
-* A quip is capped by the firmware's `SetPropertyCmd` string buffer: the current
-  build allows **512** bytes; voicebot truncates to fit and, if the pad rejects a
-  long quip (older firmware allowed only 127), retries shorter and logs a
-  "re-flash" hint rather than dropping the message. Use `--max-tokens` to keep
-  replies short if you prefer.
+* A quip is capped by the firmware's `SetPropertyCmd` string buffer — a 512-byte
+  nanopb field, i.e. **511 characters** (the terminator is counted); voicebot
+  truncates a longer reply to fit, so a chatty model can't overflow it. Use
+  `--max-tokens` to keep replies short if you prefer.
 
 ### The `touchy-pad` dependency
 

@@ -426,10 +426,9 @@ on-hardware check.
 >    Full write-up in `docs/open-issues.md`.
 > 2. **Long quips were rejected** (`INVALID_ARG` + a device-side
 >    `pb_decode failed`): `SetPropertyCmd.string_value` was capped at 128 bytes,
->    i.e. 127 characters of text. Raised to **512** in `proto/touchy.options` —
->    **this needs a re-flash**. Until then voicebot truncates to 512 and retries
->    once at 127 with a "re-flash" hint, so a long quip degrades instead of
->    vanishing.
+>    i.e. 127 characters of text. Raised to **512** in `proto/touchy.options`
+>    (511 characters of text — `max_size` counts the NUL terminator) and
+>    re-flashed on every device; voicebot truncates a longer reply to fit.
 >
 > Remaining work is Stage 4/5 (STT filter, the full `creep3r` loop), not this plan.
 

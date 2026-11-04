@@ -14,7 +14,6 @@ import pytest
 from voicebot.commands import COLOURS, WHITE, Run
 from voicebot.display import (
     LABEL_ID,
-    LEGACY_OVERRIDE_CHARS,
     MAX_OVERRIDE_CHARS,
     STARTUP_TEXT,
     PadDisplay,
@@ -90,9 +89,7 @@ def test_a_coloured_run_is_truncated_within_budget():
 
 
 def test_markup_takes_a_smaller_budget():
-    assert len(to_markup([Run("x" * 2000)], max_chars=LEGACY_OVERRIDE_CHARS)) == (
-        LEGACY_OVERRIDE_CHARS
-    )
+    assert len(to_markup([Run("x" * 2000)], max_chars=64)) == 64
 
 
 # --- font_for --------------------------------------------------------------
@@ -193,24 +190,8 @@ def test_a_headless_panel_is_reported_and_skipped(caplog):
     assert "0x0" in caplog.text
 
 
-def test_a_long_quip_is_retried_at_the_legacy_cap():
-    """Old firmware caps the override at 127 bytes — retry shorter, keep the pad."""
-
-    class CappedPad(FakePad):
-        def set_properties(self, entries):
-            if len(entries[0].string_value) > LEGACY_OVERRIDE_CHARS:
-                raise RuntimeError("device returned INVALID_ARG (2)")
-            super().set_properties(entries)
-
-    pad = CappedPad()
-    display = PadDisplay(pad, clear_after=0)
-    display.show([Run("x" * 500)])
-    assert pad.texts() == ["x" * LEGACY_OVERRIDE_CHARS]
-    assert display._pad is pad  # a short quip is not a lost pad
-
-
 def test_a_lost_pad_is_dropped_and_reconnects_next_time():
-    pad = FakePad(failures=2)  # both the write and the legacy retry fail
+    pad = FakePad(failures=1)  # the write fails ⇒ the handle is dropped
     display = PadDisplay(pad, clear_after=0)
     display.show([Run("first")])
     assert display._pad is None

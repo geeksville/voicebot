@@ -46,15 +46,11 @@ FONT_SIZES = (8, 16, 30)
 DEFAULT_CLEAR_AFTER_S = 120.0
 
 #: The device stores a `text` override in a fixed buffer: nanopb rejects a
-#: `SetPropertyCmd.string_value` longer than its `max_size`, and the firmware
-#: has no way to report that cap. 512 is what the current firmware accepts
-#: (stage LB17 raised it from 128); quips are truncated to fit.
-MAX_OVERRIDE_CHARS = 512
-
-#: What older firmware (max_size 128, i.e. 127 bytes of text) accepts. A quip
-#: that fails at :data:`MAX_OVERRIDE_CHARS` is retried at this size so an
-#: un-reflashed device still shows *something*.
-LEGACY_OVERRIDE_CHARS = 127
+#: `SetPropertyCmd.string_value` longer than its `max_size`, and the firmware has
+#: no way to report that cap. `max_size` is 512 *including* the NUL terminator
+#: (stage LB17 raised it from 128), so 511 characters of rendered markup is the
+#: most the device accepts — measured on hardware. Quips are truncated to fit.
+MAX_OVERRIDE_CHARS = 511
 
 #: Connect attempts before giving up until the next message. A bad *first*
 #: response (a leftover frame in the device FIFO from a previously-killed host)
@@ -157,7 +153,6 @@ class PadDisplay:
         self._lock = Lock()
         self._timer: Timer | None = None
         self._size: tuple[int, int] = (0, 0)
-        self._warned_legacy = False
 
     # -- lifecycle ---------------------------------------------------------
 
@@ -187,29 +182,15 @@ class PadDisplay:
     def _write_quip(self, pad: Any, runs: Sequence[Run]) -> bool:
         """Send the quip; ``False`` means the pad looks gone (drop the handle).
 
-        A rejected write is retried with a smaller budget first: older firmware
-        caps a ``text`` override at 127 bytes (the current build allows 512), so
-        a long quip would otherwise vanish without explanation.
+        :func:`to_markup` keeps the string inside the device's buffer, so a
+        refusal here means the link itself is broken rather than a bad payload.
         """
         try:
             self._write(pad, to_markup(runs))
             return True
-        except Exception as exc:  # noqa: BLE001 — maybe the quip was too long
-            log.debug("voicebot: text override failed (%s)", exc)
-        try:
-            self._write(pad, to_markup(runs, max_chars=LEGACY_OVERRIDE_CHARS))
         except Exception as exc:  # noqa: BLE001 — a lost pad is not fatal
             log.warning("voicebot: lost the touchy-pad (%s) — will reconnect", exc)
             return False
-        if not self._warned_legacy:
-            self._warned_legacy = True
-            log.warning(
-                "voicebot: the pad rejected a long quip — its firmware caps a text "
-                "override at %d bytes; re-flash to get %d",
-                LEGACY_OVERRIDE_CHARS,
-                MAX_OVERRIDE_CHARS,
-            )
-        return True
 
     # -- the pad -----------------------------------------------------------
 

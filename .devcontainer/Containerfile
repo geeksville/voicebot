@@ -1,0 +1,71 @@
+# voicebot devcontainer image — a trimmed copy of the touchy-pad devcontainer.
+#
+# Kept: Python + Poetry + just, USB (libusb) for the touchy-pad host library,
+# and userspace ALSA/PortAudio so a real USB microphone (the reSpeaker XVF3800)
+# works from inside the container.
+#
+# Stripped (voicebot does not need them): the ESP-IDF/esp32 toolchain,
+# Rust/Tauri, Deno, GTK/StreamController, the Qt runtime for the touchy-pad
+# simulator GUI, and protoc/nanopb (the published `touchy-pad` wheel ships its
+# own proto bindings).
+ARG VARIANT=25.04
+FROM ubuntu:${VARIANT}
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Ubuntu 23.04+ already creates an `ubuntu` user at uid/gid 1000; reuse it so
+# the host bind mounts (which assume uid 1000) line up.
+ARG USERNAME=ubuntu
+
+# The plain ubuntu image lacks sudo/curl/zsh/git out of the box; gpgv is needed
+# by apt for signature verification (separate from gnupg).
+RUN apt-get update \
+ && apt-get -y install --no-install-recommends \
+      sudo curl ca-certificates zsh git locales gnupg gpgv \
+ && rm -rf /var/lib/apt/lists/*
+
+# Python + the native libraries voicebot uses at runtime:
+#   python3*-dev / build-essential / pkg-config - build the occasional sdist.
+#   libusb-1.0-0 + usbutils                    - pyusb (the touchy-pad host
+#                                                library) dlopens libusb;
+#                                                lsusb for "is the pad there?".
+#   libasound2t64 / alsa-utils / libportaudio2 - ALSA + PortAudio (what python
+#                                                `sounddevice` links/dlopens).
+#   pulseaudio-utils                           - pactl/parec vs. host PipeWire.
+RUN apt-get update \
+ && apt-get -y install --no-install-recommends \
+      python3 python3-pip python3-venv python-is-python3 python3-dev \
+      build-essential pkg-config \
+      libusb-1.0-0 usbutils \
+      libasound2t64 alsa-utils libportaudio2 pulseaudio-utils \
+ && rm -rf /var/lib/apt/lists/*
+
+# Ensure the dev user exists (defensive) and give it passwordless sudo. dialout
+# and plugdev matter for serial/HID device nodes.
+RUN if ! id -u ${USERNAME} > /dev/null 2>&1; then \
+        groupadd --gid 1000 ${USERNAME} && \
+        useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash ${USERNAME}; \
+    fi \
+ && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME}-nopasswd \
+ && usermod -a -G dialout ${USERNAME} \
+ && usermod -a -G plugdev ${USERNAME}
+
+ARG FEDORA_COMPAT=0
+# On a Fedora host `dialout` is gid 18; add a matching group so device nodes
+# owned by that gid stay accessible inside the container.
+RUN if [ "$FEDORA_COMPAT" = "1" ]; then \
+        groupadd -g 18 compat_dialout; \
+        usermod -a -G compat_dialout ${USERNAME}; \
+    fi
+
+# Ubuntu sometimes creates ~/.config as root in an earlier layer; keep it
+# writable for the dev user.
+RUN mkdir -p /home/${USERNAME}/.config && chown ${USERNAME}:${USERNAME} /home/${USERNAME}/.config
+
+# Run the rest as the dev user so Poetry and its config land in $HOME.
+USER ${USERNAME}
+
+# Poetry — the build/test/run system for this project (see pyproject.toml and
+# justfile). Installed via the official installer into its own venv so it does
+# not interfere with the system Python.
+RUN curl -sSL https://install.python-poetry.org | python3 - \
+ && echo 'export PATH="$HOME/.local/bin:$PATH"' | tee -a $HOME/.bashrc $HOME/.zshrc

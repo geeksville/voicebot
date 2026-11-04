@@ -1,18 +1,30 @@
 # voicebot — Poetry project.
 #
-# Deliberately the legacy [tool.poetry] layout (no [project] table): Poetry 2.x
-# ignores path dependencies declared under [tool.poetry.dependencies] when a
-# [project] table exists (the parent repo hit this quirk with `just init`), and
-# this project has a path dependency on the touchy-pad host library. Swap it for
-# the published package with `just use-touchy-pypi`. See docs/plans/initial.md.
+# The distribution (PyPI) name is `touchy-voicebot`; the import package and the
+# console script are both `voicebot`. The `touchy-pad` host library comes from
+# PyPI, not a local path checkout — `just use-touchy-local` swaps in the sibling
+# ../../app tree while hacking on the host library itself. See
+# docs/plans/standalone.md.
 
 [tool.poetry]
-name = "voicebot"
+name = "touchy-voicebot"
 version = "0.1.0"
 description = "An eavesdropping desk robot: witty one-liners about overheard conversation, via a remote LLM."
 authors = ["Touchy-Pad contributors"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
+keywords = ["voice", "llm", "ollama", "speech-to-text", "moonshine", "touchy-pad", "led-matrix"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 packages = [{ include = "voicebot", from = "src" }]
 
 [tool.poetry.dependencies]
@@ -32,9 +44,18 @@ moonshine-voice = "^0.1.5"
 # pinning it here makes the audio layer explicit.
 sounddevice = "^0.5.6"
 # The touchy-pad host library + screen DSL, driven by `voicebot listen --display
-# pad` (src/voicebot/display.py). A path dep against the sibling checkout for
-# now — `just use-touchy-pypi` switches it to the published package.
-touchy-pad = { path = "../../app", develop = true }
+# pad` (src/voicebot/display.py). Pulled from PyPI; the floor is the first
+# release that carries the host API voicebot uses (`SetPropertiesCmd` /
+# `build_property_override` + `Label.recolor`) — anything older breaks
+# `--display pad`. `just use-touchy-local` swaps in a path dep against the
+# sibling ../../app checkout for host-library development.
+touchy-pad = ">=0.3.5"
+
+[tool.poetry.urls]
+Homepage = "https://github.com/geeksville/voicebot"
+Repository = "https://github.com/geeksville/voicebot"
+Issues = "https://github.com/geeksville/voicebot/issues"
+Changelog = "https://github.com/geeksville/voicebot/releases"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8"

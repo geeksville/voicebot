@@ -1599,13 +1599,15 @@ files = [
 
 [[package]]
 name = "touchy-pad"
-version = "0.3.4"
+version = "0.3.5"
 description = "Host library and CLI for the Touchy-Pad USB multitouch device."
 optional = false
-python-versions = ">=3.11,<3.15"
+python-versions = "<3.15,>=3.11"
 groups = ["main"]
-files = []
-develop = true
+files = [
+    {file = "touchy_pad-0.3.5-py3-none-any.whl", hash = "sha256:9f06fbc356f9cf52ba9359ca7fe6282967a037183c63ded448763c5112144488"},
+    {file = "touchy_pad-0.3.5.tar.gz", hash = "sha256:954a1ac9a09edc5f8151d512cefcc2b6c1f3c1f21260e0741d9a80c682f6dfce"},
+]
 
 [package.dependencies]
 click = ">=8.1"
@@ -1621,10 +1623,6 @@ streamcontroller-streamdeck = ">=0.1.5"
 
 [package.extras]
 sim = ["PySide6 (>=6.6,<7)", "platformdirs (>=4)"]
-
-[package.source]
-type = "directory"
-url = "../../app"
 
 [[package]]
 name = "tqdm"
@@ -1674,14 +1672,14 @@ files = [
 
 [[package]]
 name = "typing-inspection"
-version = "0.4.4"
+version = "0.4.5"
 description = "Runtime typing introspection tools"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "typing_inspection-0.4.4-py3-none-any.whl", hash = "sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147"},
-    {file = "typing_inspection-0.4.4.tar.gz", hash = "sha256:547274fa6b0a561ccf549cc9524b999a578e737d015d8709d021f9d0d13bea47"},
+    {file = "typing_inspection-0.4.5-py3-none-any.whl", hash = "sha256:bc210535442b39e1bf2805e0c7a17dfd6a4ace760c84c7f7d16245d23a6b1c39"},
+    {file = "typing_inspection-0.4.5.tar.gz", hash = "sha256:7f16c411e7930dc79596d42ab44672a3fe5f60eb34b781a1647e7872363120c7"},
 ]
 
 [package.dependencies]
@@ -1872,4 +1870,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "e8f38dd8eca8ae86685ff5fca161fcaf7983136439f852ef96b979901ba3d42c"
+content-hash = "e5838eaf63eb75c078b005f4f7c2c9daeb5d8cb6f79a2fe4d69bd257b97a7701"

@@ -320,8 +320,8 @@ the dependency strategy is pinned (`initial.md` always intended it here).
 
   | Recipe | Does |
   |---|---|
-  | `just use-touchy-local` | Point the dep at `../../app` and reinstall (the default; the "develop against the parent repo" mode). |
-  | `just use-touchy-pypi` | Point the dep at the published `touchy-pad` from PyPI and reinstall (the "someone else's checkout" mode). |
+  | `just use-touchy-local` | Point the dep at `../../app` and reinstall (the "develop against the parent repo" mode). |
+  | `just use-touchy-pypi` | Point the dep at the published `touchy-pad` from PyPI and reinstall (the default since the [standalone extraction](standalone.md)). |
 
   Mechanism (see *Decisions* #8): the simplest is `poetry add --path ../../app --develop touchy-pad`
   vs. `poetry add "touchy-pad@^0.3"` inside the recipes — but that **rewrites the
@@ -329,11 +329,13 @@ the dependency strategy is pinned (`initial.md` always intended it here).
   creates churn. The alternative is a `touchy-local` / `touchy-pypi` **optional
   dependency group** (`poetry install --with touchy-pypi`) which leaves the
   manifest alone. Either is a few lines; the plan just needs to pick one.
-* Touchy-pad is currently **`0.3.4`** and *not yet published* (`docs/pypi-checklist.md`
-  in the parent repo is still unchecked), so `use-touchy-pypi` is a
-  forward-looking switch: it is written now, exercised once the parent ships to
-  PyPI. Until then `use-touchy-local` is the only working path — stated in the
-  README so nobody is surprised.
+* Touchy-pad is published to PyPI (latest **`0.3.4`**). Since the
+  [standalone extraction](standalone.md) the default dependency is the published
+  `touchy-pad >= 0.3.5` — 0.3.5 is the first release carrying the `--display pad`
+  host API this plan needs (the 0.3.4 wheel predates `SetPropertiesCmd` /
+  `build_property_override` and `Label.recolor`). Until 0.3.5 ships,
+  `use-touchy-local` is the working dev path — stated in the README so nobody is
+  surprised.
 
 ## Touchy-pad (parent-repo) changes — the `Label.recolor` feature
 

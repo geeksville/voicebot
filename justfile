@@ -23,6 +23,11 @@ lint:
 reply *args: install
     poetry run voicebot reply {{args}}
 
+# Listen to the mic, transcribe, and log a witty reply per utterance.
+# `--fake FILE` replays a text file instead (no mic, no model).
+listen *args: install
+    poetry run voicebot listen {{args}}
+
 # List the models the remote server has pulled.
 models *args: install
     poetry run voicebot models {{args}}

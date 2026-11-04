@@ -30,6 +30,12 @@ just reply -- -f sim-overheard.txt
 
 # What's on the server?
 just models
+
+# Listen to the mic (transcribe + witty reply, logged):
+just listen
+
+# Replay a file instead — no mic, no model:
+just listen -- --fake sim-overheard.txt
 ```
 
 Or use the console script directly: `poetry run voicebot reply -f sim-overheard.txt`.
@@ -40,6 +46,7 @@ Or use the console script directly: `poetry run voicebot reply -f sim-overheard.
 |---|---|
 | `voicebot reply` | Read overheard lines (`--line` / `-f FILE` / stdin) and print a witty reply for each; `--json` for `{input, reply, skip, model}` per line; `--no-notfunny` to print the raw sentinel. |
 | `voicebot models` | List the models the server has pulled. |
+| `voicebot listen` | Listen to the mic, transcribe with **Moonshine**, and log `HEARD:` / `SKIP(…)` / `REPLY:` per utterance; `--fake FILE` replays a text file instead (no mic, no model). |
 
 Configuration is **flag → env → default**:
 
@@ -56,6 +63,29 @@ Configuration is **flag → env → default**:
 
 Try the funnier-but-more-erratic 12B model:
 `--model hf.co/bartowski/Human-Like-Mistral-Nemo-Instruct-2407-GGUF:Q8_0`.
+
+## Listening (`voicebot listen`)
+
+The audio-in half: open the mic, transcribe speech with **Moonshine Voice**
+(streaming, CPU-only — the Raspberry Pi target), keep only utterances with at
+least a few words, and ask the LLM for a quip — logging `HEARD:` / `SKIP(…)` /
+`REPLY:` lines. Display is still future work; the log lines *are* the output.
+
+The mic (a **reSpeaker XVF3800** USB array) is auto-selected by name, so
+`--device` is only needed for a different input. The first run downloads a
+Moonshine model into `~/.cache/moonshine_voice` and runs offline afterwards.
+
+| Setting | Flag | Env | Default |
+|---|---|---|---|
+| Capture device | `--device` | `VOICEBOT_MIC` | auto (name ~ `respeaker`) |
+| STT model size | `--model-arch` | `VOICEBOT_MODEL_ARCH` | `small` (tiny/base/small/medium) |
+| Min content words | `--min-words` | `VOICEBOT_MIN_WORDS` | `3` |
+| Min duration (s) | `--min-duration` | `VOICEBOT_MIN_DURATION` | `0.6` |
+| Repeat debounce (s) | `--debounce` | `VOICEBOT_DEBOUNCE` | `5.0` |
+| Replay instead of the mic | `--fake FILE` | — | off |
+| JSON events | `--json` | — | off |
+
+All the LLM flags (`--url` / `--model` / `--persona` / …) are shared with `reply`.
 
 ## Dev
 

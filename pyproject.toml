@@ -24,6 +24,13 @@ openai = ">=1.40"
 click = ">=8.1"
 # Only for the native Ollama /api/chat fallback (exact sampler control).
 requests = ">=2.31"
+# Speech-to-text for `voicebot listen` — Moonshine Voice streaming models,
+# CPU-friendly for the Raspberry Pi target. It bundles its own native library
+# (no onnxruntime dependency) and ships prebuilt x86_64 + arm64 wheels.
+moonshine-voice = "^0.1.5"
+# Microphone capture (PortAudio bindings); moonshine-voice pulls it in too, but
+# pinning it here makes the audio layer explicit.
+sounddevice = "^0.5.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8"

@@ -86,3 +86,51 @@ def test_models_lists_server_models(monkeypatch):
 def test_version_option():
     result = CliRunner().invoke(cli.main, ["--version"])
     assert "voicebot" in result.output
+
+
+def test_listen_fake_replays_utterances(monkeypatch, tmp_path):
+    _use_fake(monkeypatch, {"the bread is done baking": "Time to toast!"})
+    lines = tmp_path / "overheard.txt"
+    lines.write_text("the bread is done baking\nuh\n")
+    result = CliRunner().invoke(cli.main, ["listen", "--fake", str(lines), "--json"])
+    assert result.exit_code == 0
+    events = [json.loads(line) for line in result.output.splitlines() if line.strip()]
+    assert [e["event"] for e in events].count("heard") == 2
+    reply = next(e for e in events if e["event"] == "reply")
+    assert reply["heard"] == "the bread is done baking"
+    assert reply["reply"] == "Time to toast!"
+    skip = next(e for e in events if e["event"] == "skip")
+    assert skip["reason"] == "too_short"
+
+
+def test_listen_fake_never_asks_about_short_utterances(monkeypatch, tmp_path):
+    asked: list[str] = []
+
+    class RecordingClient(FakeClient):
+        def chat(self, messages):
+            asked.append(messages[-1]["content"])
+            return "quip"
+
+    FakeClient.replies = {}
+    monkeypatch.setattr(cli, "ChatClient", RecordingClient)
+    lines = tmp_path / "overheard.txt"
+    lines.write_text("uh\nhmm yeah\n")
+    result = CliRunner().invoke(cli.main, ["listen", "--fake", str(lines), "--json"])
+    assert result.exit_code == 0
+    events = [json.loads(line) for line in result.output.splitlines() if line.strip()]
+    assert events and all(e["event"] in ("heard", "skip") for e in events)
+    assert not any(e["event"] == "reply" for e in events)
+    assert asked == []
+
+
+def test_listen_logs_heard_and_reply(monkeypatch, tmp_path, caplog):
+    import logging
+
+    _use_fake(monkeypatch, {"the bread is done baking": "Time to toast!"})
+    lines = tmp_path / "overheard.txt"
+    lines.write_text("the bread is done baking\n")
+    with caplog.at_level(logging.INFO, logger="voicebot"):
+        result = CliRunner().invoke(cli.main, ["listen", "--fake", str(lines)])
+    assert result.exit_code == 0
+    assert "HEARD: the bread is done baking" in caplog.text
+    assert "REPLY: Time to toast!" in caplog.text

@@ -126,8 +126,8 @@ directive voicebot consumes — and never displays.
 
 * `/notfunny` — "nothing worth saying": the reply is *suppressed* rather than
   showing a weak joke.
-* `/color:NAME` — colour the text — `red` / `green` / `blue` / `yellow` /
-  `white`, or a `0xRRGGBB` hex, e.g. `/color:red Danger ahead`.
+* `/color/NAME` — colour the text — `red` / `green` / `blue` / `yellow` /
+  `white`, or a `0xRRGGBB` hex, e.g. `/color/red Danger ahead`.
 
 All of that lives in [`src/voicebot/persona.py`](src/voicebot/persona.py) and
 [`src/voicebot/commands.py`](src/voicebot/commands.py).
@@ -160,8 +160,8 @@ All the LLM flags (`--url` / `--model` / `--persona` / ...) are shared with
 
 The LED-out half: voicebot builds **one** full-panel scrolling label on a
 touchy-pad, then each quip is a single property write (no screen re-upload).
-`/color:NAME` runs are rendered in colour via LVGL inline recolour — e.g.
-`/color:red Danger ahead` scrolls "Danger ahead" in red. See the plan in
+`/color/NAME` runs are rendered in colour via LVGL inline recolour — e.g.
+`/color/red Danger ahead` scrolls "Danger ahead" in red. See the plan in
 [docs/plans/ledout.md](docs/plans/ledout.md).
 
 * The panel shows **"I'm voicebot"** on connect, then the quips; after

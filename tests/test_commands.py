@@ -34,35 +34,35 @@ def test_text_that_merely_contains_notfunny_is_not_a_skip():
 
 
 def test_colour_starts_a_run():
-    out = parse("/color:red Danger!")
+    out = parse("/color/red Danger!")
     assert out.runs == (Run("Danger!", COLOURS["red"]),)
     assert out.text == "Danger!"
 
 
 def test_colour_mid_sentence_splits_runs():
-    out = parse("Look out /color:red Danger!")
+    out = parse("Look out /color/red Danger!")
     assert out.runs == (Run("Look out ", WHITE), Run("Danger!", COLOURS["red"]))
     assert out.text == "Look out Danger!"
 
 
 def test_several_colours_in_one_reply():
-    out = parse("/color:red Stop /color:blue go")
+    out = parse("/color/red Stop /color/blue go")
     assert [r.colour for r in out.runs] == [COLOURS["red"], COLOURS["blue"]]
     assert out.text == "Stop go"
 
 
 def test_hex_colours_are_accepted():
     for value in ("0xFF00AA", "#FF00AA", "ff00aa"):
-        assert parse(f"/color:{value} hi").runs[0].colour == 0xFF00AA
+        assert parse(f"/color/{value} hi").runs[0].colour == 0xFF00AA
 
 
 def test_named_colours_are_case_insensitive():
-    assert parse("/COLOR:Red hi").runs[0].colour == COLOURS["red"]
+    assert parse("/COLOR/Red hi").runs[0].colour == COLOURS["red"]
 
 
 def test_a_bad_colour_value_keeps_the_current_colour(caplog):
     with caplog.at_level("WARNING"):
-        out = parse("/color:chartreuse hi")
+        out = parse("/color/chartreuse hi")
     assert out.runs == (Run("hi", WHITE),)
     assert "chartreuse" in caplog.text
 
@@ -76,8 +76,18 @@ def test_an_unknown_command_is_stripped_and_logged(caplog):
 
 
 def test_a_command_only_reply_is_a_skip():
-    assert parse("/color:red").skip is True
+    assert parse("/color/red").skip is True
     assert parse("   ").skip is True
+
+
+def test_the_colon_separator_is_not_a_colour_command(caplog):
+    # The contract switched from ``/color:NAME`` to ``/color/NAME``; the old
+    # form is no longer a valid command, so the colour stays white.
+    with caplog.at_level("WARNING"):
+        out = parse("/color:red hi")
+    assert out.runs == (Run(":red hi", WHITE),)
+    assert "/color" in out.found
+    assert "color" in caplog.text
 
 
 def test_urls_and_word_slashes_are_not_commands():

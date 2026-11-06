@@ -34,7 +34,7 @@ def test_respond_suppresses_notfunny():
 
 
 def test_respond_carries_colour_runs():
-    responder = Responder(_chat_returning("/color:red Danger!"), model="m")
+    responder = Responder(_chat_returning("/color/red Danger!"), model="m")
     out = responder.respond("the light is red")
     assert out.runs == (Run("Danger!", COLOURS["red"]),)
     assert out.text == "Danger!"

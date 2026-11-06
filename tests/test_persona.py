@@ -10,5 +10,5 @@ def test_default_persona_carries_the_contract():
     # emoji / stray command characters (the output is destined for a scrolling
     # LED matrix).
     assert "/notfunny" in DEFAULT_PERSONA
-    assert "/color:" in DEFAULT_PERSONA
+    assert "/color/" in DEFAULT_PERSONA
     assert "emoji" in DEFAULT_PERSONA

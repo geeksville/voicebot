@@ -4,7 +4,7 @@ Any word in the LLM's reply that starts with ``/`` is a directive to voicebot an
 is *never displayed*. Two commands exist today:
 
 * ``/notfunny`` — the model has nothing worth saying; suppress the whole reply.
-* ``/color:NAME`` — start a coloured run. ``NAME`` is ``red`` / ``green`` /
+* ``/color/NAME`` — start a coloured run. ``NAME`` is ``red`` / ``green`` /
   ``blue`` / ``yellow`` / ``white``, or ``0xRRGGBB`` (also ``#RRGGBB`` /
   ``RRGGBB``) so the model can pick any colour. Everything after the command is
   that colour until the next ``/color`` (or the end of the reply).
@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 #: The "unmarked" colour — what LVGL renders plain (non-``#RRGGBB``) text in.
 WHITE = 0xFFFFFF
 
-#: Named colours accepted by ``/color:NAME``.
+#: Named colours accepted by ``/color/NAME``.
 COLOURS = {
     "red": 0xFF0000,
     "green": 0x00FF00,
@@ -38,10 +38,11 @@ COLOURS = {
     "white": 0xFFFFFF,
 }
 
-#: A command token: ``/name`` optionally ``:value``, starting a word (so ``a/b``
+#: A command token: ``/name`` optionally ``/value``, starting a word (so ``a/b``
 #: and the ``//`` in a URL are not commands). ``\w``/``/`` before the slash is
-#: excluded so ``http://x`` does not read as ``/x``.
-_CMD_RE = re.compile(r"(?<![/\w])/([a-z]+)(?::(\S+))?", re.IGNORECASE)
+#: excluded so ``http://x`` does not read as ``/x``. The value is a single
+#: whitespace-free token, so ``/color/red`` and ``/color/0xFF00AA`` both parse.
+_CMD_RE = re.compile(r"(?<![/\w])/([a-z]+)(?:/(\S+))?", re.IGNORECASE)
 #: ``0xRRGGBB`` / ``#RRGGBB`` / a bare ``RRGGBB``.
 _HEX_RE = re.compile(r"^(?:0x|#)?([0-9a-f]{6})$", re.IGNORECASE)
 _SPACE_RE = re.compile(r"[ \t]+")
@@ -70,7 +71,7 @@ class ParsedReply:
 
 
 def resolve_colour(value: str) -> int | None:
-    """``/color:`` value → ``0xRRGGBB``, or ``None`` if it isn't recognised."""
+    """``/color/`` value → ``0xRRGGBB``, or ``None`` if it isn't recognised."""
     named = COLOURS.get(value.lower())
     if named is not None:
         return named

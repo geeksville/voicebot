@@ -45,7 +45,7 @@ def test_reply_suppresses_notfunny(monkeypatch):
 
 
 def test_reply_strips_commands_from_the_printed_text(monkeypatch):
-    _use_fake(monkeypatch, {"the light is red": "/color:red Danger ahead"})
+    _use_fake(monkeypatch, {"the light is red": "/color/red Danger ahead"})
     result = CliRunner().invoke(cli.main, ["reply", "--line", "the light is red"])
     assert result.exit_code == 0
     assert result.output.strip() == "Danger ahead"

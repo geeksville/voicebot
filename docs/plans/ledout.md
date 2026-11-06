@@ -50,7 +50,7 @@ overrides — never another screen upload.
   see *The screen*, below), with a font chosen from what the firmware actually
   compiled in and **inline recolour enabled**.
 * **The `/command` contract** — replacing the bare `NOTFUNNY` sentinel with a
-  small in-band command language: `/notfunny`, `/color:…`, extensible, and
+  small in-band command language: `/notfunny`, `/color/…`, extensible, and
   **multi-colour within a single reply**.
 * **A touchy-pad feature: inline recolor** — a new `Label.recolor` proto field plus
   the firmware / host-DSL / sim / Rust / docs work to honour it (the parent-repo
@@ -100,20 +100,24 @@ The two commands to define now:
 | Command | Meaning |
 |---|---|
 | `/notfunny` | The model has nothing worth saying → suppress the whole reply (replaces the `NOTFUNNY` sentinel). |
-| `/color:xxx` | Print the text in colour `xxx`, where `xxx` is `red` / `green` / `blue` / `yellow` / `white` (case-insensitive) or an exact `0xRRGGBB` (also accept `#RRGGBB` / bare `RRGGBB`) so the model can pick *any* colour. |
+| `/color/xxx` | Print the text in colour `xxx`, where `xxx` is `red` / `green` / `blue` / `yellow` / `white` (case-insensitive) or an exact `0xRRGGBB` (also accept `#RRGGBB` / bare `RRGGBB`) so the model can pick *any* colour. |
 
-…and the grammar is deliberately open, so more commands (`/speed:…`,
-`/repeat:…`) become a table entry rather than a redesign.
+…and the grammar is deliberately open, so more commands (`/speed/…`,
+`/repeat/…`) become a table entry rather than a redesign.
+
+> **Separator:** a command's value is introduced by **`/`** — `/color/red`. The
+> earlier `:` form (`/color:red`) is *not* part of the contract and is no longer
+> parsed as a colour value.
 
 ### Parsing rules
 
-* **Token shape:** `/` + `[a-z]+` + optional `:` + a value, where the value runs
+* **Token shape:** `/` + `[a-z]+` + optional `/` + a value, where the value runs
   to the next whitespace. Names are case-insensitive.
 * **Anywhere, stripped:** a command token is a directive wherever it appears and
-  is **removed** from the displayed text (so `/color:red Danger!` displays
+  is **removed** from the displayed text (so `/color/red Danger!` displays
   `Danger!`). Whitespace left behind is collapsed.
-* **Colour runs:** `/color:X` starts a new run — the text *after* it (up to the
-  next `/color`, or the end of the reply) is colour `X`. `Look out /color:red
+* **Colour runs:** `/color/X` starts a new run — the text *after* it (up to the
+  next `/color`, or the end of the reply) is colour `X`. `Look out /color/red
   Danger!` therefore becomes two runs: `("Look out ", white)` and `("Danger!",
   red)`. That maps 1:1 onto LVGL's inline recolour, so **multi-colour within one
   reply works**.
@@ -121,7 +125,7 @@ The two commands to define now:
   trailing punctuation) — accept it and strip it.
 * **Empty result:** if stripping the commands leaves nothing, there is nothing to
   show; treat it as a skip (log `SKIP(empty)`), like `/notfunny`.
-* **Unknown command** (`/foo`, or `/color:` with a bad value): stripped from the
+* **Unknown command** (`/foo`, or `/color/` with a bad value): stripped from the
   text, logged at WARNING, otherwise ignored (never displayed, never fatal). A
   bad `/color` value leaves the run colour unchanged.
 * **`#` is reserved:** a literal `#` in a quip would be swallowed by the recolour
@@ -135,7 +139,7 @@ roughly:
 
 > * If you have nothing funny to say, reply with exactly `/notfunny` (any word
 >   starting with `/` is a command we consume; it is never shown).
-> * To colour your words, write `/color:NAME` — everything after it is that
+> * To colour your words, write `/color/NAME` — everything after it is that
 >   colour until you change it again or the reply ends. NAME is `red`, `green`,
 >   `blue`, `yellow`, `white`, or a hex value like `0xRRGGBB`. Text before any
 >   `/color` is white, and you can switch colours several times in one reply.
@@ -474,13 +478,13 @@ recommended option.
 | 8 | **`poetry add`-based switch recipes** for `use-touchy-local` / `use-touchy-pypi`. | README notes the `pyproject.toml` + `poetry.lock` churn and the `git checkout` way back. |
 
 Decision 2 drops the "reset" concept entirely: a reply is parsed in isolation, so
-its colour is simply whatever its own markup says. `/color:red … /color:blue …`
+its colour is simply whatever its own markup says. `/color/red … /color/blue …`
 gives two colours in one quip; a reply with no `/color` is plain white (the
 label's `text_color`) — i.e. exactly LVGL's default recolour behaviour.
 
 ### Deferred (explicitly not in this plan)
 
-* More `/commands` (`/speed:`, `/repeat:`, `/font:`…) — a table entry away, but
+* More `/commands` (`/speed/`, `/repeat/`, `/font/`…) — a table entry away, but
   the sketch named only two.
 * Non-text rendering on the matrix (shapes / images) — the touch-less default
   screen already covers pixels.
@@ -532,7 +536,7 @@ label's `text_color`) — i.e. exactly LVGL's default recolour behaviour.
 ## Acceptance criteria (definition of done)
 
 1. `voicebot listen --display pad` on the desk matrix scrolls each quip; a
-   `/color:…` reply shows colour, **including several colours within one quip**;
+   `/color/…` reply shows colour, **including several colours within one quip**;
    `/notfunny` shows nothing.
 2. The startup banner (`I'm voicebot`) appears on connect, and the marquee clears
    after `--clear-after` seconds with nothing new (default 120).

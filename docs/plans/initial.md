@@ -12,11 +12,11 @@ own home later (exactly like the sibling `tools/googly-vr`).
 > [`ledout.md`](ledout.md)). The responder CLI (`voicebot reply` /
 > `voicebot models`) is built and verified against the live server, and
 > `voicebot listen --display pad` now scrolls each quip on a touchy-pad (LED
-> matrix or LCD) — including multi-colour via the `/color:` command. Speech-to-text
+> matrix or LCD) — including multi-colour via the `/color/` command. Speech-to-text
 > (Stage 4) and the full `creep3r` loop (Stage 5) remain **explicitly deferred**.
 >
 > **Contract change:** the bare `NOTFUNNY` sentinel was replaced by the
-> `/command` contract (`/notfunny`, `/color:NAME`) — see
+> `/command` contract (`/notfunny`, `/color/NAME`) — see
 > [`ledout.md`](ledout.md) → "The `/command` contract". The `NOTFUNNY` text in
 > the Stage 1/2 sections below is kept as the historical record.
 
@@ -153,7 +153,7 @@ behaviour, including the `tests/hermes.txt` recordings:
 * **~~`NOTFUNNY` contract~~ → the `/command` contract (superseded — see
   [`ledout.md`](ledout.md)).** The reply is a single string; any word starting
   with `/` is a command voicebot consumes. `/notfunny` suppresses the reply
-  (print nothing, no display update) and `/color:NAME` colours the text (many
+  (print nothing, no display update) and `/color/NAME` colours the text (many
   colours per reply). The CLI's `--json` emits `{"input":…, "reply":…,
   "skip":true|false, "model":…, "raw":…}` per line. `tests/hermes.txt` is the
   historical tape (recorded against the old sentinel).

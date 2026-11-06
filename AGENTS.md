@@ -19,7 +19,7 @@ of the **creep3r** art project. This repo is standalone: it depends on the
 | `src/voicebot/server.py` | `ChatClient` (OpenAI `/v1` + native `/api/chat`) + `VoicebotError`. |
 | `src/voicebot/responder.py` | Persona → prompt → reply, and the reply value object. |
 | `src/voicebot/persona.py` | The default persona (the toaster robot). |
-| `src/voicebot/commands.py` | The `/command` channel (`/notfunny`, `/color:NAME`). |
+| `src/voicebot/commands.py` | The `/command` channel (`/notfunny`, `/color/NAME`). |
 | `src/voicebot/audio.py` | Mic capture + Moonshine STT (the audio-in stage). |
 | `src/voicebot/gate.py` | The utterance gate (min words, de-dup). |
 | `src/voicebot/listen.py` | The listen loop wiring the above together. |

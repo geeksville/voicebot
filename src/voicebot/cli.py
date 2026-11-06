@@ -140,15 +140,14 @@ def _build_responder(
     return Responder(client.chat, model=model, persona=persona)
 
 
-def _make_display(kind: str, screen_name: str, clear_after_s: float) -> PadDisplay | None:
-    """The display for ``--display`` (``None`` for ``off``), banner already shown.
+def _make_display(screen_name: str, clear_after_s: float) -> PadDisplay:
+    """The touchy-pad display, startup banner already shown.
 
+    Displaying is part of ``listen`` — there is no flag to turn it off.
     :class:`~voicebot.display.PadDisplay` only reaches for ``touchy_pad`` when it
-    actually draws, so ``--display pad`` without the host library installed
-    degrades to a logged warning rather than a crash.
+    actually draws, and a missing / unplugged pad is a logged warning rather than
+    a crash, so the pad may be plugged in at any time.
     """
-    if kind == "off":
-        return None
     display = PadDisplay(screen_name=screen_name, clear_after=clear_after_s)
     display.start()  # the "I'm voicebot" banner (connects lazily)
     return display
@@ -261,14 +260,6 @@ def reply(
     help="Suppress an identical repeat of the previous utterance within N seconds.",
 )
 @click.option(
-    "--display",
-    "display_kind",
-    type=click.Choice(["off", "pad"]),
-    default="off",
-    show_default=True,
-    help="Also scroll each quip on a touchy-pad (LED matrix or LCD).",
-)
-@click.option(
     "--screen-name",
     "screen_name",
     default=SCREEN_NAME,
@@ -295,7 +286,6 @@ def listen(
     min_words: int,
     min_duration_s: float,
     debounce_s: float,
-    display_kind: str,
     screen_name: str,
     clear_after_s: float,
     url: str,
@@ -310,7 +300,7 @@ def listen(
     timeout: float,
     json_out: bool,
 ) -> None:
-    """Listen to the mic, transcribe, and log a witty reply per utterance."""
+    """Listen, transcribe, log a witty reply per utterance, and scroll it on the pad."""
     if not json_out:
         logging.getLogger("voicebot").setLevel(logging.INFO)
     responder = _build_responder(
@@ -331,12 +321,12 @@ def listen(
         if fake is not None
         else AudioIn(device=device, model_arch=model_arch)
     )
-    display = _make_display(display_kind, screen_name, clear_after_s)
+    display = _make_display(screen_name, clear_after_s)
     listener = Listener(
         responder,
         gate,
         emit=json_emitter if json_out else None,
-        display=display.show if display is not None else None,
+        display=display.show,
         inline=fake is not None,
     )
     try:
@@ -347,8 +337,7 @@ def listen(
     except KeyboardInterrupt:  # pragma: no cover - interactive stop
         click.echo("voicebot: stopped.", err=True)
     finally:
-        if display is not None:
-            display.close()
+        display.close()
 
 
 @main.command()

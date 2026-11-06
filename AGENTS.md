@@ -15,7 +15,7 @@ of the **creep3r** art project. This repo is standalone: it depends on the
 
 | Path | Purpose |
 |------|---------|
-| `src/voicebot/cli.py` | `click` CLI: `reply` / `models` / `listen`. |
+| `src/voicebot/cli.py` | `click` CLI: `reply` / `models` / `listen` (`listen` always scrolls on the pad). |
 | `src/voicebot/server.py` | `ChatClient` (OpenAI `/v1` + native `/api/chat`) + `VoicebotError`. |
 | `src/voicebot/responder.py` | Persona → prompt → reply, and the reply value object. |
 | `src/voicebot/persona.py` | The default persona (the toaster robot). |
@@ -54,7 +54,7 @@ just bump-version          # bump version, commit, tag, push
   functions). That is what lets the whole package + test suite run with no
   touchy-pad and no hardware.
 - **`touchy-pad` floor is `>= 0.3.8`** — the first release with the host API
-  `--display pad` needs (`SetPropertiesCmd` / `build_property_override` +
+  the display needs (`SetPropertiesCmd` / `build_property_override` +
   `Label.recolor` arrived in 0.3.5; 0.3.8 added `Label.scroll_speed_px_s`, the
   marquee-speed knob `display.py` uses to slow the scroll to
   `DEFAULT_SCROLL_SPEED_PX_S`). Older releases break the display path and its

@@ -28,14 +28,14 @@ devcontainer, add CI + PyPI release workflows, and be movable out of
 |---|---|---|
 | PyPI name | `touchy-voicebot` | The bare name `voicebot` is already taken on PyPI (someone else's 0.0.1). |
 | Import package / console script | `voicebot` (unchanged) | Only the *distribution* name changes; keeps the code diff tiny. |
-| `touchy-pad` dependency | PyPI `>=0.3.8` (default) | The floor is the first release with the host API voicebot's `--display pad` uses (`SetPropertiesCmd` / `build_property_override` + `Label.recolor` from 0.3.5, `Label.scroll_speed_px_s` — the marquee speed — from 0.3.8). `just use-touchy-local` (path dep on `../../app`) stays the dev path for host-library work. |
+| `touchy-pad` dependency | PyPI `>=0.3.8` (default) | The floor is the first release with the host API the display uses (`SetPropertiesCmd` / `build_property_override` + `Label.recolor` from 0.3.5, `Label.scroll_speed_px_s` — the marquee speed — from 0.3.8). `just use-touchy-local` (path dep on `../../app`) stays the dev path for host-library work. |
 | CI OS matrix | ubuntu + macos + windows | `moonshine-voice` ships wheels for linux x86_64/arm64, macos arm64, win_amd64; the tests import no native libs, so all three install + run. |
 | Devcontainer | strip to Python + audio + USB | voicebot devs do not build firmware or run the sim GUI. |
 
 ## Notes / open questions
 
 - **Touchy-pad floor**: `pyproject.toml` requires `touchy-pad >= 0.3.8` (settled
-  — 0.3.5 shipped the `--display pad` host API, 0.3.8 added
+  — 0.3.5 shipped the host API the display uses, 0.3.8 added
   `Label.scroll_speed_px_s`) and `poetry.lock` is committed, so a fresh
   `poetry install` / CI resolve just works. `just use-touchy-local` re-locks
   against the sibling `../../app` tree for host-library work;

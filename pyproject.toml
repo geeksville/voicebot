@@ -49,12 +49,12 @@ sounddevice = "^0.5.6"
 # import honest. `>=13.7` is the first line that carries everything logs.py
 # uses (RichHandler + truecolor `#rrggbb` Text styles).
 rich = ">=13.7"
-# The touchy-pad host library + screen DSL, driven by `voicebot listen --display
-# pad` (src/voicebot/display.py). Pulled from PyPI; the floor is the first
+# The touchy-pad host library + screen DSL, driven by `voicebot listen`
+# (src/voicebot/display.py). Pulled from PyPI; the floor is the first
 # release that carries the host API voicebot uses (`SetPropertiesCmd` /
 # `build_property_override` + `Label.recolor` from 0.3.5, and
 # `Label.scroll_speed_px_s` from 0.3.8, which sets the marquee speed) — anything
-# older breaks `--display pad`. `just use-touchy-local` swaps in a path dep
+# older breaks the display. `just use-touchy-local` swaps in a path dep
 # against the sibling ../../app checkout for host-library development.
 touchy-pad = ">=0.3.8"
 

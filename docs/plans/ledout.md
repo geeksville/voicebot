@@ -16,6 +16,11 @@ stages lb1–lb16); the first target is a single WS2812B matrix on a desk.
 > repo's code and the sibling `tools/googly-vr`, which drives the same panel with
 > the same mechanism. The recolor feature is specified here but not written — the
 > owner flashes + tests it on hardware once it lands.
+>
+> **Update (2026-11-06): the `--display {off,pad}` flag is gone.** Every
+> `voicebot listen` run drives the pad — a missing / unplugged pad is just a
+> logged warning — and the `listen-pad` just recipe went with it. Read the
+> `--display pad` mentions below as the default behaviour (historical record).
 
 ## Goal / vision
 
@@ -297,9 +302,9 @@ device, no screen re-upload.
 | `src/voicebot/responder.py` | `Reply` gains `runs`; `respond()` uses `commands.parse` (the notfunny special-case is gone). |
 | `src/voicebot/persona.py` | The `DEFAULT_PERSONA` text → the `/notfunny` + `/color` contract; `is_notfunny` / `NOTFUNNY` deleted. |
 | `src/voicebot/listen.py` | `ListenEvent` gains `runs`; a **display sink** is invoked on `KIND_REPLY` (default: no display). |
-| `src/voicebot/cli.py` | `listen` gains `--display {off,pad}` (default `off`), `--screen-name`, `--clear-after`; `--no-notfunny` dropped. |
+| `src/voicebot/cli.py` | `listen` gains `--display {off,pad}`, `--screen-name`, `--clear-after`; `--no-notfunny` dropped. (Later: `--display` removed — the pad is always driven.) |
 | `pyproject.toml` | add `touchy-pad = { path = "../../app", develop = true }`. |
-| `justfile` | `use-touchy-local` / `use-touchy-pypi`; a `listen-pad` convenience recipe. |
+| `justfile` | `use-touchy-local` / `use-touchy-pypi`; a `listen-pad` convenience recipe (later dropped with the flag). |
 | `README.md`, `docs/plans/initial.md` | document the display + the new command contract; Stage 3 links here. |
 
 The event flow gains exactly one hop:
@@ -538,14 +543,14 @@ label's `text_color`) — i.e. exactly LVGL's default recolour behaviour.
 
 ## Acceptance criteria (definition of done)
 
-1. `voicebot listen --display pad` on the desk matrix scrolls each quip; a
+1. `voicebot listen` on the desk matrix scrolls each quip; a
    `/color/…` reply shows colour, **including several colours within one quip**;
    `/notfunny` shows nothing.
 2. The startup banner (`I'm voicebot`) appears on connect, and the marquee clears
    after `--clear-after` seconds with nothing new (default 120).
 3. Works on at least the 32×8 LED matrix **and** a large LCD board with **no code
    change** (geometry + font derived from `board_info`).
-4. `voicebot listen --fake sim-overheard.txt --display pad` demonstrates the
+4. `voicebot listen --fake sim-overheard.txt` demonstrates the
    whole path with no mic and no model.
 5. `just test` green with no device, network or model; `just lint` clean; the
    existing `reply` / `listen` / `models` behaviour preserved.

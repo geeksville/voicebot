@@ -27,15 +27,10 @@ build:
 reply *args: install
     poetry run voicebot reply {{args}}
 
-# Listen to the mic, transcribe, and log a witty reply per utterance.
+# Listen to the mic, transcribe, and scroll a witty reply per utterance on the pad.
 # `--fake FILE` replays a text file instead (no mic, no model).
 listen *args: install
     poetry run voicebot listen {{args}}
-
-# Listen *and* scroll each quip on a touchy-pad (LED matrix / LCD).
-# Pass CLI flags straight after the recipe name: `just listen-pad --fake f.txt`
-listen-pad *args: install
-    poetry run voicebot listen --display pad {{args}}
 
 # --- touchy-pad dependency ---------------------------------------------------
 # The default dependency is the *published* touchy-pad package (see

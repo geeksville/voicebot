@@ -25,9 +25,34 @@ class FakeClient:
         return ["hermes", "nemo"]
 
 
-def _use_fake(monkeypatch, replies=None):
+class FakeDisplay:
+    """Stand-in for ``voicebot.display.PadDisplay`` — never touches hardware."""
+
+    instances: ClassVar[list[FakeDisplay]] = []
+
+    def __init__(self, screen_name=None, clear_after=None):
+        self.screen_name = screen_name
+        self.clear_after = clear_after
+        self.started = False
+        self.closed = False
+        self.shown: list[tuple] = []
+        FakeDisplay.instances.append(self)
+
+    def start(self):
+        self.started = True
+
+    def show(self, runs):
+        self.shown.append(runs)
+
+    def close(self):
+        self.closed = True
+
+
+def _use_fake(monkeypatch, replies=None, client=None):
     FakeClient.replies = replies or {}
-    monkeypatch.setattr(cli, "ChatClient", FakeClient)
+    FakeDisplay.instances = []
+    monkeypatch.setattr(cli, "ChatClient", client or FakeClient)
+    monkeypatch.setattr(cli, "PadDisplay", FakeDisplay)
 
 
 def test_reply_line(monkeypatch):
@@ -113,8 +138,7 @@ def test_listen_fake_never_asks_about_short_utterances(monkeypatch, tmp_path):
             asked.append(messages[-1]["content"])
             return "quip"
 
-    FakeClient.replies = {}
-    monkeypatch.setattr(cli, "ChatClient", RecordingClient)
+    _use_fake(monkeypatch, client=RecordingClient)
     lines = tmp_path / "overheard.txt"
     lines.write_text("uh\nhmm yeah\n")
     result = CliRunner().invoke(cli.main, ["listen", "--fake", str(lines), "--json"])
@@ -123,6 +147,21 @@ def test_listen_fake_never_asks_about_short_utterances(monkeypatch, tmp_path):
     assert events and all(e["event"] in ("heard", "skip") for e in events)
     assert not any(e["event"] == "reply" for e in events)
     assert asked == []
+
+
+def test_listen_scrolls_each_quip_on_the_pad(monkeypatch, tmp_path):
+    """The pad is driven by default — no flag to pass."""
+    _use_fake(monkeypatch, {"the bread is done baking": "/color/red Time to toast!"})
+    lines = tmp_path / "overheard.txt"
+    lines.write_text("the bread is done baking\nuh\n")
+    result = CliRunner().invoke(cli.main, ["listen", "--fake", str(lines)])
+    assert result.exit_code == 0
+    assert len(FakeDisplay.instances) == 1
+    display = FakeDisplay.instances[0]
+    assert display.started and display.closed
+    # Only the reply reaches the pad; the skipped utterance does not.
+    assert [[run.text for run in runs] for runs in display.shown] == [["Time to toast!"]]
+    assert display.shown[0][0].colour == 0xFF0000  # the /color/red run
 
 
 def test_listen_logs_heard_and_reply(monkeypatch, tmp_path, caplog):

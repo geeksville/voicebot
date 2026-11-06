@@ -42,8 +42,8 @@ Two halves, usable independently:
 
 * **Audio in** (`voicebot listen`) — mic -> transcript -> gate -> LLM, logging
   `HEARD:` / `SKIP(...)` / `REPLY:` per utterance.
-* **LED out** (`voicebot listen --display pad`) — each quip is a *single*
-  property write that scrolls across a touchy-pad; no screen re-upload.
+* **LED out** (`voicebot listen`) — each quip is a *single* property write that
+  scrolls across a touchy-pad; no screen re-upload.
 
 ## Install
 
@@ -54,8 +54,9 @@ pip install touchy-voicebot          # or:  pipx install touchy-voicebot
 ```
 
 That pulls the [`touchy-pad`](https://pypi.org/project/touchy-pad/) host library
-(**>= 0.3.8**) from PyPI for the `--display pad` output. The LLM / STT half needs
-no touchy-pad at all. `--display pad` relies on a recent touchy-pad host API
+(**>= 0.3.8**) from PyPI for the pad output. The LLM / STT half needs no
+touchy-pad at all — with no pad attached the display is simply a logged warning.
+The display relies on a recent touchy-pad host API
 (`SetPropertiesCmd` / `build_property_override` + inline-recolour labels, plus
 `scroll_speed_px_s` for the marquee speed); if the published version is older
 than 0.3.8, install the git `main` or build the host library and use
@@ -82,14 +83,11 @@ voicebot reply -f sim-overheard.txt
 # What's pulled on the server?
 voicebot models
 
-# Listen to the mic (transcribe + witty reply, logged):
+# Listen to the mic (transcribe + witty reply, logged and scrolled on the pad):
 voicebot listen
 
-# Replay a file instead — no mic, no model:
+# Replay a file instead — no mic, no model (the pad still gets the quips):
 voicebot listen --fake sim-overheard.txt
-
-# ... and scroll each quip on a touchy-pad:
-voicebot listen --display pad --fake sim-overheard.txt
 ```
 
 ## Commands
@@ -98,7 +96,7 @@ voicebot listen --display pad --fake sim-overheard.txt
 |---|---|
 | `voicebot reply` | Read overheard lines (`--line` / `-f FILE` / stdin) and print a witty reply for each (`--json` for `{input, reply, skip, model, raw}` per line). Commands are stripped from the printed text, so a `/notfunny` reply prints nothing. |
 | `voicebot models` | List the models the server has pulled. |
-| `voicebot listen` | Listen to the mic, transcribe with **Moonshine**, and log `HEARD:` / `SKIP(...)` / `REPLY:` per utterance; `--fake FILE` replays a text file instead (no mic, no model); `--display pad` also scrolls each quip on a touchy-pad. |
+| `voicebot listen` | Listen to the mic, transcribe with **Moonshine**, log `HEARD:` / `SKIP(...)` / `REPLY:` per utterance, and scroll each quip on an attached touchy-pad; `--fake FILE` replays a text file instead (no mic, no model). |
 
 Configuration is **flag -> env -> default** — click implements the precedence:
 
@@ -137,8 +135,8 @@ All of that lives in [`src/voicebot/persona.py`](src/voicebot/persona.py) and
 The audio-in half: open the mic, transcribe speech with **Moonshine Voice**
 (streaming, CPU-only — the Raspberry Pi target), keep only utterances with at
 least a few content words, and ask the LLM for a quip, logging `HEARD:` /
-`SKIP(...)` / `REPLY:` lines. Add `--display pad` to also scroll the quip on a
-touchy-pad.
+`SKIP(...)` / `REPLY:` lines and scrolling the quip on an attached touchy-pad
+(that is always on; a missing pad just logs a warning).
 
 Those log lines go to **stderr** and are rendered with
 [`rich`](https://rich.readthedocs.io): `HEARD:` / `SKIP(...)` / `REPLY:` each get
@@ -156,14 +154,13 @@ plain text, and the message text itself is unchanged.
 | Repeat debounce (s) | `--debounce` | `VOICEBOT_DEBOUNCE` | `5.0` |
 | Replay instead of the mic | `--fake FILE` | — | off |
 | JSON events | `--json` | — | off |
-| Scroll on a touchy-pad | `--display` | — | `off` (`pad` to enable) |
 | On-device screen name | `--screen-name` | — | `voicebot` |
 | Blank after quiet (s) | `--clear-after` | `VOICEBOT_CLEAR_AFTER` | `120` (`0` = never) |
 
 All the LLM flags (`--url` / `--model` / `--persona` / ...) are shared with
 `reply`.
 
-## The display (`voicebot listen --display pad`)
+## The display (on the touchy-pad)
 
 The LED-out half: voicebot builds **one** full-panel scrolling label on a
 touchy-pad, then each quip is a single property write (no screen re-upload).

@@ -11,8 +11,9 @@ own home later (exactly like the sibling `tools/googly-vr`).
 > **Status (2026-11-04): Stages 1 + 2 implemented; Stage 3 implemented** (see
 > [`ledout.md`](ledout.md)). The responder CLI (`voicebot reply` /
 > `voicebot models`) is built and verified against the live server, and
-> `voicebot listen --display pad` now scrolls each quip on a touchy-pad (LED
-> matrix or LCD) — including multi-colour via the `/color/` command. Speech-to-text
+> `voicebot listen` now scrolls each quip on a touchy-pad (LED
+> matrix or LCD) — including multi-colour via the `/color/` command; the pad is
+> driven by every `listen` run, with no flag to enable it. Speech-to-text
 > (Stage 4) and the full `creep3r` loop (Stage 5) remain **explicitly deferred**.
 >
 > **Contract change:** the bare `NOTFUNNY` sentinel was replaced by the
@@ -238,8 +239,9 @@ device output, `display.py` becomes the **only** module that imports
 
 Implemented in full (D0–D3 + the parent-repo `Label.recolor` feature, stage
 LB17): `src/voicebot/display.py` (the sole `touchy_pad` importer) builds one
-full-panel `SCROLL_CIRCULAR` label with inline recolour enabled, `voicebot listen
---display pad` drives it, the pad connects lazily, and an idle timer clears the
+full-panel `SCROLL_CIRCULAR` label with inline recolour enabled, `voicebot listen`
+drives it (the `--display` flag was later dropped — the pad is always driven),
+the pad connects lazily, and an idle timer clears the
 marquee. The `touchy-pad = { path = "../../app", develop = true }` path dep and
 the `just use-touchy-local` / `use-touchy-pypi` recipes are in place. See
 [`ledout.md`](ledout.md) for the plan, decisions and the (superseded) bullets

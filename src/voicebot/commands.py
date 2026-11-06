@@ -9,6 +9,10 @@ is *never displayed*. Two commands exist today:
   ``RRGGBB``) so the model can pick any colour. Everything after the command is
   that colour until the next ``/color`` (or the end of the reply).
 
+The grammar is deliberately forgiving: a stray trailing ``/`` on the token is
+ignored (``/color/green/`` is green, not an unknown colour ``green/``), and an
+unknown command is stripped and logged rather than displayed.
+
 A reply parses into ordered :class:`Run` objects (text + colour). Colours are
 purely decorative here: LVGL renders the *unmarked* text in the label's
 ``text_color`` (white) and only the ``#RRGGBB …#`` runs in their colour, so a
@@ -40,9 +44,11 @@ COLOURS = {
 
 #: A command token: ``/name`` optionally ``/value``, starting a word (so ``a/b``
 #: and the ``//`` in a URL are not commands). ``\w``/``/`` before the slash is
-#: excluded so ``http://x`` does not read as ``/x``. The value is a single
-#: whitespace-free token, so ``/color/red`` and ``/color/0xFF00AA`` both parse.
-_CMD_RE = re.compile(r"(?<![/\w])/([a-z]+)(?:/(\S+))?", re.IGNORECASE)
+#: excluded so ``http://x`` does not read as ``/x``. The value is one
+#: slash-free token, so ``/color/red`` and ``/color/0xFF00AA`` both parse, and any
+#: stray *trailing* slashes are absorbed by the token rather than becoming part of
+#: the value or the displayed text — ``/color/green/`` is ``green``, not ``green/``.
+_CMD_RE = re.compile(r"(?<![/\w])/([a-z]+)(?:/([^\s/]+))?/*", re.IGNORECASE)
 #: ``0xRRGGBB`` / ``#RRGGBB`` / a bare ``RRGGBB``.
 _HEX_RE = re.compile(r"^(?:0x|#)?([0-9a-f]{6})$", re.IGNORECASE)
 _SPACE_RE = re.compile(r"[ \t]+")

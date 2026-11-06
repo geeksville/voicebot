@@ -112,7 +112,10 @@ The two commands to define now:
 ### Parsing rules
 
 * **Token shape:** `/` + `[a-z]+` + optional `/` + a value, where the value runs
-  to the next whitespace. Names are case-insensitive.
+  to the next whitespace or `/`. Names are case-insensitive. Any stray *trailing*
+  slashes are ignored — `/color/green/` colours the text green (it is not the
+  unknown colour `green/`) — and the token still consumes them, so nothing is
+  displayed.
 * **Anywhere, stripped:** a command token is a directive wherever it appears and
   is **removed** from the displayed text (so `/color/red Danger!` displays
   `Danger!`). Whitespace left behind is collapsed.

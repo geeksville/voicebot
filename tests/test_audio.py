@@ -116,6 +116,11 @@ def test_build_wires_on_error_and_releases_the_engine_when_start_fails(monkeypat
             self.calls.append(("model_arch", arch))
             return self
 
+        def device(self, index):
+            # Reached only when a real mic is visible (resolve_device finds one).
+            self.calls.append(("device", index))
+            return self
+
         def on_line(self, cb):
             self.calls.append(("on_line", cb))
             return self

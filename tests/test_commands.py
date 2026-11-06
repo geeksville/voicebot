@@ -90,6 +90,17 @@ def test_the_colon_separator_is_not_a_colour_command(caplog):
     assert "color" in caplog.text
 
 
+def test_a_trailing_slash_after_the_value_is_ignored():
+    out = parse("/color/green/ Danger!")
+    assert out.runs == (Run("Danger!", COLOURS["green"]),)
+    assert out.text == "Danger!"  # the stray "/" is not displayed
+    assert out.found == ("/color/green/",)
+    assert parse("/color/#FF00AA/ hi").runs[0].colour == 0xFF00AA
+    assert parse("/notfunny/").skip is True
+    # Repeated trailing slashes are absorbed too — nothing stray reaches the display.
+    assert parse("/color/green// Danger!").runs == (Run("Danger!", COLOURS["green"]),)
+
+
 def test_urls_and_word_slashes_are_not_commands():
     assert parse("see http://example.com/x for more").text == "see http://example.com/x for more"
     assert parse("either/or").text == "either/or"

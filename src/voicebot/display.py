@@ -49,7 +49,7 @@ FONT_SIZES = (8, 16, 30)
 #: the host library and the firmware clamp this to 10..10000 px/s, and LVGL
 #: still caps one traversal at 10 s, so a *very* long quip scrolls faster than
 #: this floor (see ``docs/plans/ledout.md``).
-DEFAULT_SCROLL_SPEED_PX_S = 20
+DEFAULT_SCROLL_SPEED_PX_S = 30
 
 #: Blank the display after this many seconds with no new reply (0 = never).
 DEFAULT_CLEAR_AFTER_S = 120.0

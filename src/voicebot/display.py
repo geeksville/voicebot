@@ -42,6 +42,15 @@ WHITE = 0xFFFFFF
 #: any other size silently falls back to the theme default.
 FONT_SIZES = (8, 16, 30)
 
+#: Marquee speed for the scrolling label, in px/s (touchy-pad ≥ 0.3.8, the
+#: release that carries stage LB19's ``Label.scroll_speed_px_s``). LVGL's own
+#: default — ``LV_LABEL_DEF_SCROLL_SPEED`` in its ``lv_label.c`` — is 40 px/s,
+#: which blurs past on an 8-px-tall matrix; half of it reads comfortably. Both
+#: the host library and the firmware clamp this to 10..10000 px/s, and LVGL
+#: still caps one traversal at 10 s, so a *very* long quip scrolls faster than
+#: this floor (see ``docs/plans/ledout.md``).
+DEFAULT_SCROLL_SPEED_PX_S = 20
+
 #: Blank the display after this many seconds with no new reply (0 = never).
 DEFAULT_CLEAR_AFTER_S = 120.0
 
@@ -142,6 +151,7 @@ class PadDisplay:
         screen_name: str = SCREEN_NAME,
         clear_after: float = DEFAULT_CLEAR_AFTER_S,
         font_size: int | None = None,
+        scroll_speed_px_s: int = DEFAULT_SCROLL_SPEED_PX_S,
         timer_factory: Callable[[float, Callable[[], None]], Timer] = _daemon_timer,
     ) -> None:
         self._pad = pad
@@ -149,6 +159,7 @@ class PadDisplay:
         self._screen_name = screen_name
         self._clear_after = float(clear_after)
         self._font_size = font_size
+        self._scroll_speed_px_s = scroll_speed_px_s
         self._timer_factory = timer_factory
         self._lock = Lock()
         self._timer: Timer | None = None
@@ -257,6 +268,7 @@ class PadDisplay:
             font_size=self._font_size or font_for(height),
             long_mode=LongMode.LONG_MODE_SCROLL_CIRCULAR,
             recolor=True,  # stage LB17: parse `#RRGGBB text#` runs
+            scroll_speed_px_s=self._scroll_speed_px_s,  # stage LB19: half LVGL's 40 px/s
             rect=rect(0, 0, width, height),  # SCROLL_CIRCULAR needs a fixed box
             style=style(text_color=WHITE),
         )

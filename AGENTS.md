@@ -52,11 +52,13 @@ just bump-version          # bump version, commit, tag, push
 - **Keep `touchy_pad` imports inside `display.py`, and lazy** (inside the
   functions). That is what lets the whole package + test suite run with no
   touchy-pad and no hardware.
-- **`touchy-pad` floor is `>= 0.3.5`** — the first release with the host API
+- **`touchy-pad` floor is `>= 0.3.8`** — the first release with the host API
   `--display pad` needs (`SetPropertiesCmd` / `build_property_override` +
-  `Label.recolor`). Older releases break the display path and its tests. Until a
-  suitable version is on PyPI, resolve it with `just use-touchy-local` (a path
-  dep on the sibling `../../app` tree).
+  `Label.recolor` arrived in 0.3.5; 0.3.8 added `Label.scroll_speed_px_s`, the
+  marquee-speed knob `display.py` uses to slow the scroll to
+  `DEFAULT_SCROLL_SPEED_PX_S`). Older releases break the display path and its
+  tests. Until a suitable version is on PyPI, resolve it with
+  `just use-touchy-local` (a path dep on the sibling `../../app` tree).
 - **Keep `moonshine_voice` / `sounddevice` imports lazy** too (inside
   `AudioIn._build()` / `resolve_device()`), so importing `voicebot` never needs
   the native libs — and CI needs no mic.

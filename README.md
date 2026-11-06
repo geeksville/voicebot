@@ -54,11 +54,12 @@ pip install touchy-voicebot          # or:  pipx install touchy-voicebot
 ```
 
 That pulls the [`touchy-pad`](https://pypi.org/project/touchy-pad/) host library
-(**>= 0.3.5**) from PyPI for the `--display pad` output. The LLM / STT half needs
+(**>= 0.3.8**) from PyPI for the `--display pad` output. The LLM / STT half needs
 no touchy-pad at all. `--display pad` relies on a recent touchy-pad host API
-(`SetPropertiesCmd` / `build_property_override` + inline-recolour labels); if the
-published version is older than 0.3.5, install the git `main` or build the host
-library and use [Dev](#dev)'s `just use-touchy-local`.
+(`SetPropertiesCmd` / `build_property_override` + inline-recolour labels, plus
+`scroll_speed_px_s` for the marquee speed); if the published version is older
+than 0.3.8, install the git `main` or build the host library and use
+[Dev](#dev)'s `just use-touchy-local`.
 
 You also need a reachable **Ollama** server — a local `ollama serve`, or a
 remote box over Tailscale / LAN. Point `--url` / `VOICEBOT_URL` at it. On first
@@ -165,6 +166,9 @@ touchy-pad, then each quip is a single property write (no screen re-upload).
 
 * The panel shows **"I'm voicebot"** on connect, then the quips; after
   `--clear-after` seconds with nothing new it goes blank.
+* The marquee scrolls at **20 px/s** — `DEFAULT_SCROLL_SPEED_PX_S`, half of
+  LVGL's own 40 px/s default — via touchy-pad's `scroll_speed_px_s` label field
+  (stage LB19, released in touchy-pad 0.3.8).
 * The pad is opened **lazily** — plug it in at any time and the next quip lands
   on it. Nothing is fatal: no pad / an unplugged pad / an incompatible firmware
   all just log a warning and retry.

@@ -1599,14 +1599,14 @@ files = [
 
 [[package]]
 name = "touchy-pad"
-version = "0.3.5"
+version = "0.3.8"
 description = "Host library and CLI for the Touchy-Pad USB multitouch device."
 optional = false
 python-versions = "<3.15,>=3.11"
 groups = ["main"]
 files = [
-    {file = "touchy_pad-0.3.5-py3-none-any.whl", hash = "sha256:9f06fbc356f9cf52ba9359ca7fe6282967a037183c63ded448763c5112144488"},
-    {file = "touchy_pad-0.3.5.tar.gz", hash = "sha256:954a1ac9a09edc5f8151d512cefcc2b6c1f3c1f21260e0741d9a80c682f6dfce"},
+    {file = "touchy_pad-0.3.8-py3-none-any.whl", hash = "sha256:64192596ee1c59a93f6c652ed76194e2cee1ccd52c921a4f562ee5ba2eccb30c"},
+    {file = "touchy_pad-0.3.8.tar.gz", hash = "sha256:5a8e68fa584ebef6ebb44171aaef7f76fa56ad03d530e1a794e2691841e21379"},
 ]
 
 [package.dependencies]
@@ -1870,4 +1870,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.15"
-content-hash = "e5838eaf63eb75c078b005f4f7c2c9daeb5d8cb6f79a2fe4d69bd257b97a7701"
+content-hash = "3fc579e1b3041fdf451aad50c13bb966b1aaa501e99998272f56baf61ef07b3b"

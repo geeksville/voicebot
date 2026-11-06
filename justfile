@@ -55,7 +55,7 @@ use-touchy-local:
 use-touchy-pypi:
     #!/usr/bin/env bash
     set -euo pipefail
-    poetry add --no-interaction "touchy-pad@>=0.3.5"
+    poetry add --no-interaction "touchy-pad@>=0.3.8"
     poetry install --no-interaction
 
 # List the models the remote server has pulled.

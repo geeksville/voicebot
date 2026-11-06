@@ -13,6 +13,7 @@ import pytest
 
 from voicebot.commands import COLOURS, WHITE, Run
 from voicebot.display import (
+    DEFAULT_SCROLL_SPEED_PX_S,
     LABEL_ID,
     MAX_OVERRIDE_CHARS,
     STARTUP_TEXT,
@@ -134,8 +135,20 @@ def test_the_saved_screen_is_a_scrolling_recolor_label():
     assert label.label.recolor is True
     assert label.label.text == STARTUP_TEXT
     assert label.label.long_mode == proto.LongMode.LONG_MODE_SCROLL_CIRCULAR
+    assert label.label.scroll_speed_px_s == DEFAULT_SCROLL_SPEED_PX_S
     assert (label.rect.w, label.rect.h) == (32, 8)
     assert any(style.font_size == 8 for style in label.styles)
+
+
+def test_the_marquee_speed_is_configurable():
+    """Stage LB19's `scroll_speed_px_s` is the knob that slows the marquee."""
+    pytest.importorskip("touchy_pad._proto")
+    pad = FakePad(width=32, height=8)
+    PadDisplay(pad, clear_after=0, scroll_speed_px_s=12).show([Run("hi")])
+
+    layer = pad.saved[0].to_proto().active
+    label = getattr(layer, layer.WhichOneof("kind")).layout.children[0]
+    assert label.label.scroll_speed_px_s == 12
 
 
 def test_the_screen_is_not_rebuilt_per_quip():

@@ -1,5 +1,5 @@
 misc
-* fix scrolling rate
+* fix scrolling rate - done: touchy-pad LB19 `scroll_speed_px_s`, voicebot scrolls at 20 px/s (`DEFAULT_SCROLL_SPEED_PX_S`)
 * do touchy release
 * use funnier model
 * use colors

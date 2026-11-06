@@ -210,6 +210,7 @@ s = Screen(SCREEN_NAME, layout=absolute())
 s += label(LABEL_ID, text=STARTUP_TEXT, font_size=font_for(height),
            long_mode=LongMode.LONG_MODE_SCROLL_CIRCULAR,
            recolor=True,                        # NEW field (see parent-repo changes)
+           scroll_speed_px_s=DEFAULT_SCROLL_SPEED_PX_S,  # 20 px/s — stage LB19
            rect=rect(0, 0, width, height),
            style=style(text_color=0xFFFFFF))    # the "unmarked text" colour
 pad.screen_save(s)
@@ -229,6 +230,14 @@ pad.screen_load(screen_path(SCREEN_NAME))
 * **`recolor=True`** is the parent-repo feature this plan adds: it switches on
   LVGL's inline-recolour parsing for this label, so a `#RRGGBB text#` run renders
   in colour while plain text uses the style's white.
+* **Speed.** The marquee runs at `DEFAULT_SCROLL_SPEED_PX_S` = **20 px/s**, half
+  of LVGL's own 40 px/s (`LV_LABEL_DEF_SCROLL_SPEED` in `lv_label.c`), which
+  reads as a blur on an 8-px-tall matrix. It rides the parent repo's
+  `Label.scroll_speed_px_s` (stage LB19, released as touchy-pad 0.3.8), which
+  the firmware maps to `lv_anim_speed_clamped(px_s, 300, 10000)` — so a single
+  traversal is still capped at 10 s and a *very* long quip scrolls faster than
+  20 px/s. A fixed per-pass time would need `scroll_duration_ms` instead, which
+  the host can only size if it knows the rendered text width.
 * **Name.** The screen is `voicebot` (`--screen-name`), **not** `default`, so a
   later `touchy init` / `touchy screen demo` can't clobber it and vice-versa.
 * **Reconnect** rebuilds the screen and forgets the last-sent state.
@@ -329,13 +338,13 @@ the dependency strategy is pinned (`initial.md` always intended it here).
   creates churn. The alternative is a `touchy-local` / `touchy-pypi` **optional
   dependency group** (`poetry install --with touchy-pypi`) which leaves the
   manifest alone. Either is a few lines; the plan just needs to pick one.
-* Touchy-pad is published to PyPI (latest **`0.3.4`**). Since the
+* Touchy-pad is published to PyPI (latest **`0.3.8`**). Since the
   [standalone extraction](standalone.md) the default dependency is the published
-  `touchy-pad >= 0.3.5` — 0.3.5 is the first release carrying the `--display pad`
-  host API this plan needs (the 0.3.4 wheel predates `SetPropertiesCmd` /
-  `build_property_override` and `Label.recolor`). Until 0.3.5 ships,
-  `use-touchy-local` is the working dev path — stated in the README so nobody is
-  surprised.
+  `touchy-pad >= 0.3.8` — 0.3.5 was the first release carrying the `--display pad`
+  host API this plan needs (`SetPropertiesCmd` / `build_property_override` and
+  `Label.recolor`), and 0.3.8 added `Label.scroll_speed_px_s`, which is what
+  slows the marquee (stage LB19, `DEFAULT_SCROLL_SPEED_PX_S`).
+  `use-touchy-local` stays the dev path for hacking on the host library itself.
 
 ## Touchy-pad (parent-repo) changes — the `Label.recolor` feature
 

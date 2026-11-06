@@ -20,7 +20,7 @@ from typing import TextIO
 
 import click
 
-from . import __version__
+from . import __version__, logs
 from .audio import AudioIn, FakeTranscriptSource, read_lines
 from .config import (
     DEFAULT_CTX,
@@ -158,7 +158,7 @@ def _make_display(kind: str, screen_name: str, clear_after_s: float) -> PadDispl
 @click.version_option(__version__, prog_name="voicebot")
 def main() -> None:
     """Witty one-liners about overheard conversation, via a remote LLM."""
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
+    logs.configure()
 
 
 @main.command()

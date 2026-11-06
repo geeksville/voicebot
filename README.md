@@ -140,6 +140,13 @@ least a few content words, and ask the LLM for a quip, logging `HEARD:` /
 `SKIP(...)` / `REPLY:` lines. Add `--display pad` to also scroll the quip on a
 touchy-pad.
 
+Those log lines go to **stderr** and are rendered with
+[`rich`](https://rich.readthedocs.io): `HEARD:` / `SKIP(...)` / `REPLY:` each get
+their own colour, and the `REPLY:` line prints the quip **in the same colours the
+display scrolls** for it (see [`src/voicebot/logs.py`](src/voicebot/logs.py)) — so
+a colour reply is visible without the pad. A pipe or `NO_COLOR` falls back to
+plain text, and the message text itself is unchanged.
+
 | Setting | Flag | Env | Default |
 |---|---|---|---|
 | Capture device | `--device` | `VOICEBOT_MIC` | auto (name ~ `respeaker`) |

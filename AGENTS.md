@@ -24,6 +24,7 @@ of the **creep3r** art project. This repo is standalone: it depends on the
 | `src/voicebot/gate.py` | The utterance gate (min words, de-dup). |
 | `src/voicebot/listen.py` | The listen loop wiring the above together. |
 | `src/voicebot/display.py` | The **only** module that imports `touchy_pad` (the LED-out stage). |
+| `src/voicebot/logs.py` | Terminal logging (rich): `HEARD` / `SKIP` / `REPLY` in colour, quips in their display colours. |
 | `src/voicebot/config.py` | Defaults + the `Settings` value objects. |
 | `tests/` | pytest (network-free; audio + touchy-pad are faked). |
 | `docs/` | `plans/` (design), `hardware.md`, `TODO.md`. |
@@ -62,8 +63,12 @@ just bump-version          # bump version, commit, tag, push
 - **Keep `moonshine_voice` / `sounddevice` imports lazy** too (inside
   `AudioIn._build()` / `resolve_device()`), so importing `voicebot` never needs
   the native libs — and CI needs no mic.
-- **Logging:** `logging.getLogger(__name__)`; the CLI configures the `voicebot`
-  logger. High-frequency RPC-ish lines go on a child logger.
+- **Logging:** `logging.getLogger(__name__)`; `cli.main` calls `logs.configure()`
+  (a rich handler on stderr — colour only on a terminal, so pipes and `--json`
+  stay clean). The listen lines come from `logs.heard_line` / `skip_line` /
+  `reply_line`, which draw a quip in its display colours; keep their *plain*
+  text (`REPLY: …`, `SKIP(too_short): …`) intact — `grep` and `caplog` rely on
+  it. High-frequency RPC-ish lines go on a child logger.
 - **The `/command` contract** lives in `commands.py`; commands are stripped from
   every displayed/printed reply. Keep `/notfunny` as the final backstop.
 - **Config is flag → env → default** via click (`default=` + `envvar=`); a new

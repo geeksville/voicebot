@@ -23,6 +23,7 @@ import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from . import logs
 from .audio import Utterance
 from .commands import Run
 from .gate import UtteranceGate
@@ -67,13 +68,18 @@ DisplaySink = Callable[[tuple[Run, ...]], None]
 
 
 def log_emitter(event: ListenEvent) -> None:
-    """The default emitter: ``HEARD`` / ``REPLY`` / ``SKIP`` log lines."""
+    """The default emitter: ``HEARD`` / ``REPLY`` / ``SKIP`` log lines.
+
+    The lines are :mod:`rich` texts (see :mod:`voicebot.logs`), so a ``REPLY``
+    shows the quip in the colours the display scrolls while its plain text stays
+    ``REPLY: …``.
+    """
     if event.kind == KIND_REPLY:
-        log.info("REPLY: %s", event.reply)
+        log.info(logs.reply_line(event.runs, event.reply))
     elif event.kind == KIND_SKIP:
-        log.info("SKIP(%s): %s", event.reason, event.text)
+        log.info(logs.skip_line(event.reason, event.text))
     else:
-        log.info("HEARD: %s", event.text)
+        log.info(logs.heard_line(event.text))
 
 
 def json_emitter(event: ListenEvent) -> None:

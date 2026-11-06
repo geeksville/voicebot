@@ -1,7 +1,13 @@
 misc
-* fix led brightness
 * fix scrolling rate
-* remove LEGACY_OVERRIDE_CHARS and related checks - all firmware can now do 512 chars
+* do touchy release
+* use funnier model
+* use colors
+* add ai usage to readme
+
+* make demo video
+* pitch for layout eink screens for each stage (voice rec - thinking - output (optional - will be on scrolling led anyways)). rated g filter.
+* possibly hanging about 4' tall or smaller on cenral thing.  led can connect via wifi or usb
 
 Great thread https://www.reddit.com/r/homeassistant/s/wl02ow67MK
 https://www.reddit.com/r/RockchipNPU/comments/1g3cetq/fast_and_accurate_speechtotext_on_rk3588_with/?share_id=5YA3sA8R8K1hXxF8YJaFh 

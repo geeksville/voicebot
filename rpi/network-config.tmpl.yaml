@@ -1,0 +1,16 @@
+network:
+  version: 2
+  ethernets:
+    eth0:
+      optional: true           # Prevents boot delays if Wi-Fi isn't found
+      dhcp4: true
+      dhcp6: true
+  wifis:
+    wlan0:
+      optional: true           # Prevents boot delays if Wi-Fi isn't found
+      dhcp4: true
+      dhcp6: true
+      regulatory-domain: "US"  # ISO/IEC 3166 alpha-2 country code
+      access-points:
+        "Your_Wi-Fi_SSID":
+          password: "Your_Wi-Fi_Password"
